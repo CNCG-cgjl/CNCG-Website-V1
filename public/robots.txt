@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://cncg.me/sitemap.xml
+
+# 禁止爬取私有或冗余路径
+Disallow: /api/
+Disallow: /.vercel/
+Disallow: /admin/
