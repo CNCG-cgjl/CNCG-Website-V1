@@ -2,7 +2,7 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/jpeg" href="/logo.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- 基础 SEO -->
@@ -24,7 +24,6 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="CNCG | 网站开发 · 内容创作 · 数字化解决方案" />
     <meta name="twitter:description" content="专注网站开发、内容创作与数字化解决方案" />
-    <meta name="twitter:site" content="@cncg_dev" />
 
     <!-- ========== 结构化数据 (JSON-LD) ========== -->
     <!-- WebSite Schema — 让搜索引擎理解站点结构 -->
@@ -54,10 +53,27 @@
       "url": "https://cncg.me",
       "jobTitle": "全栈开发者 & 内容创作者",
       "sameAs": [
-        "https://github.com/cncg",
-        "https://twitter.com/cncg"
+        "https://github.com/CNCG-dev"
       ],
       "knowsAbout": ["Vue.js", "JavaScript", "前端开发", "网站设计", "飞书"]
+    }
+    </script>
+
+    <!-- Service Schema — 服务信息 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "name": "CNCG 远程技术服务",
+      "description": "专注网站开发、内容创作与数字化解决方案，提供Vue3开发、技术咨询、远程协助等专业服务",
+      "provider": {
+        "@type": "Person",
+        "name": "CNCG",
+        "url": "https://cncg.me"
+      },
+      "areaServed": "CN",
+      "serviceType": "远程技术服务",
+      "url": "https://cncg.me/shop"
     }
     </script>
 

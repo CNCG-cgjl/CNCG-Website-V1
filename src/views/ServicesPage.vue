@@ -112,10 +112,9 @@
             立即联系
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </RouterLink>
-          <a href="https://wpa.qq.com/msgrd?v=3&uin=3230801354&site=qq&menu=yes"
-             target="_blank" rel="noopener noreferrer" class="cta-secondary">
-            QQ 快速沟通
-          </a>
+          <button class="cta-secondary" @click="copyQQ">
+            QQ: 3230801354 {{ qqCopied ? '(已复制!)' : '' }}
+          </button>
         </div>
       </div>
     </section>
@@ -129,6 +128,17 @@ import { useIntersectionObserver } from '@/composables/useIntersectionObserver.j
 const servicesRef = ref(null)
 const processRef = ref(null)
 const techRef = ref(null)
+const qqCopied = ref(false)
+
+const copyQQ = async () => {
+  try {
+    await navigator.clipboard.writeText('3230801354')
+  } catch {
+    const t = document.createElement('textarea'); t.value = '3230801354'; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t)
+  }
+  qqCopied.value = true
+  setTimeout(() => { qqCopied.value = false }, 2000)
+}
 
 useIntersectionObserver(servicesRef, { threshold: 0.08 })
 useIntersectionObserver(processRef, { threshold: 0.1 })

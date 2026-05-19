@@ -19,6 +19,7 @@
             <input v-model="form.authorEmail" type="email" placeholder="邮箱（不公开）" maxlength="100" class="field-input" />
           </div>
         </div>
+        <input v-model="form.website" type="text" tabindex="-1" autocomplete="off" class="hp-field" aria-hidden="true" />
         <div class="form-field">
           <textarea v-model="form.content" placeholder="写下你的评论... *" required maxlength="1000" rows="3" class="field-textarea"></textarea>
         </div>
@@ -83,7 +84,8 @@ const successMsg = ref('')
 const form = ref({
   authorName: '',
   authorEmail: '',
-  content: ''
+  content: '',
+  website: ''
 })
 
 const organizedComments = computed(() => organizeComments(comments.value))
@@ -107,7 +109,8 @@ async function handleSubmit() {
       authorName: form.value.authorName,
       authorEmail: form.value.authorEmail,
       content: form.value.content,
-      parentId: replyTo.value?.id || null
+      parentId: replyTo.value?.id || null,
+      website: form.value.website
     })
 
     comments.value.push({
@@ -116,6 +119,7 @@ async function handleSubmit() {
     })
 
     form.value.content = ''
+    form.value.website = ''
     replyTo.value = null
     successMsg.value = '评论已提交，审核后将显示 ✨'
     setTimeout(() => { successMsg.value = '' }, 5000)
@@ -148,6 +152,14 @@ onMounted(loadComments)
   border: 1.5px solid var(--border); border-radius: var(--radius-md);
   font-size: 0.85rem; color: var(--text-primary); outline: none;
   transition: border-color 0.2s, box-shadow 0.2s; font-family: inherit;
+}
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 .field-input:focus, .field-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(6,182,212,0.15); }
 .field-input::placeholder, .field-textarea::placeholder { color: var(--text-muted); }

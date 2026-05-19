@@ -12,9 +12,9 @@
     {
       "source": "/api/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Origin", "value": "https://cncg.me" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, x-notify-token" }
       ]
     },
     {
@@ -39,11 +39,30 @@
       ]
     }
   ],
+  "crons": [
+    {
+      "path": "/api/cron/check-updates",
+      "schedule": "0 */6 * * *"
+    }
+  ],
   "env": {
     "FEISHU_APP_ID": "@feishu_app_id",
     "FEISHU_APP_SECRET": "@feishu_app_secret",
-    "QQ_BOT_WEBHOOK": "@qq_bot_webhook",
+    "FEISHU_BLOG_FOLDER_ID": "@feishu_blog_folder_id",
+    "FEISHU_WIKI_TOKEN": "@feishu_wiki_token",
+    "FEISHU_WEBHOOK_URL": "@feishu_webhook_url",
+    "FEISHU_WEBHOOK_SECRET": "@feishu_webhook_secret",
+    "FEISHU_BITABLE_APP_TOKEN": "@feishu_bitable_app_token",
+    "FEISHU_BITABLE_TABLE_ID": "@feishu_bitable_table_id",
+    "QMSG_KEY": "@qmsg_key",
+    "QQ_NUMBER": "@qq_number",
+    "QQ_BOT_APP_ID": "@qq_bot_app_id",
+    "QQ_BOT_TOKEN": "@qq_bot_token",
+    "NOTIFY_TOKEN": "@notify_token",
+    "CRON_TOKEN": "@cron_token",
+    "DEPLOY_HOOK_TOKEN": "@deploy_hook_token",
     "VITE_SUPABASE_URL": "@supabase_url",
-    "VITE_SUPABASE_ANON_KEY": "@supabase_anon_key"
+    "VITE_SUPABASE_ANON_KEY": "@supabase_anon_key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key"
   }
 }

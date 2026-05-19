@@ -21,9 +21,42 @@ export async function feishuProxy(action, params = {}) {
   return response.json()
 }
 
+export async function getWikiSpaceList() {
+  const result = await feishuProxy('wiki_space_list')
+  return result.data?.data?.items || []
+}
+
+export async function getWikiSpaceNodes(spaceId, parentNodeToken = '', pageToken = '') {
+  const params = { space_id: spaceId }
+  if (parentNodeToken) params.parent_node_token = parentNodeToken
+  if (pageToken) params.page_token = pageToken
+  const result = await feishuProxy('wiki_space_nodes', params)
+  return result.data?.data || {}
+}
+
+export async function getWikiNodeInfo(nodeToken) {
+  const result = await feishuProxy('wiki_node_info', { node_token: nodeToken })
+  return result.data?.data?.node || {}
+}
+
 export async function getWikiNodes(spaceId) {
   const result = await feishuProxy('wiki_nodes', { space_id: spaceId })
   return result.data?.data?.items || result.data?.items || []
+}
+
+export async function getWikiRoot() {
+  const result = await feishuProxy('wiki_root')
+  return result.data?.data || result.data || {}
+}
+
+export async function getWikiMeta() {
+  const result = await feishuProxy('wiki_meta')
+  return result.data?.data || result.data || {}
+}
+
+export async function getBlogMeta() {
+  const result = await feishuProxy('blog_meta')
+  return result.data?.data || result.data || {}
 }
 
 export async function getDocument(documentId) {
@@ -63,7 +96,11 @@ export function extractTextFromBlock(block) {
 
 export function formatDocumentDate(timestamp) {
   if (!timestamp) return ''
-  const date = new Date(timestamp)
+  const numericTimestamp = Number(timestamp)
+  if (!Number.isFinite(numericTimestamp)) return ''
+  const normalizedTimestamp = numericTimestamp < 1e12 ? numericTimestamp * 1000 : numericTimestamp
+  const date = new Date(normalizedTimestamp)
+  if (Number.isNaN(date.getTime())) return ''
   return date.toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: '2-digit',

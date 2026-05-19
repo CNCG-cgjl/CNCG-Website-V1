@@ -94,17 +94,35 @@
     <!-- CTA 区 -->
     <section class="section cta-section">
       <div class="container cta-inner">
-        <h2 class="cta-title fade-in-up">找不到想要的服务？</h2>
+        <h2 class="cta-title fade-in-up">需要服务？立即下单</h2>
         <p class="cta-desc fade-in-up" style="animation-delay:0.1s">
-          直接联系我，一对一沟通您的具体需求
+          闲鱼担保交易，安全放心；或直接 QQ/微信咨询
         </p>
         <div class="cta-btns fade-in-up" style="animation-delay:0.2s">
-          <a href="https://wpa.qq.com/msgrd?v=3&uin=3230801354&site=qq&menu=yes"
-             target="_blank" rel="noopener noreferrer" class="cta-primary">
-            通过 QQ 联系我
+          <a href="https://www.goofish.com/personal?spm=a21ybx.home.nav.1.4c053da6c7Qiup" target="_blank" rel="noopener noreferrer" class="cta-primary xianyu-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            闲鱼下单（担保交易）
           </a>
-          <RouterLink to="/note" class="cta-secondary">浏览技术文章</RouterLink>
+          <button class="cta-primary qq-btn" @click="copyQQ">
+            <svg width="18" height="18" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M824.8 613.2c-16-51.4-34.4-94.6-62.7-165.3C766.5 262.2 689.3 112 511.5 112 331.7 112 256.2 265.2 261 447.9c-28.4 70.8-46.7 113.7-62.7 165.3-34 109.5-23 154.8-14.6 155.8 18 2.2 70.1-82.4 70.1-82.4 0 49 25.2 112.9 79.8 159-26.4 8.1-85.7 29.9-71.6 53.8 11.4 19.3 196.2 12.3 249.5 6.3 53.3 6 238.1 13 249.5-6.3 14.1-23.8-45.3-45.7-71.6-53.8 54.6-46.2 79.8-110.1 79.8-159 0 0 52.1 84.6 70.1 82.4 8.5-1.1 19.5-46.4-14.5-155.8z" fill="currentColor"/></svg>
+            QQ咨询 {{ qqCopied ? '(已复制!)' : '' }}
+          </button>
+          <div class="wechat-cta-wrapper">
+            <button class="cta-primary wechat-btn">
+              <svg width="18" height="18" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M664.250054 368.541681c10.015098 0 19.892049 0.732687 29.67281 1.795902-26.647917-122.810047-159.358451-214.077703-310.826188-214.077703-169.353083 0-308.085774 114.232694-308.085774 259.274068 0 83.708494 46.165436 152.460344 123.281791 205.78483l-30.80868 91.730191 107.688651-53.455469c38.558178 7.53665 69.459978 15.308661 107.924012 15.308661 9.66308 0 19.230993-0.470721 28.752858-1.225921-6.025227-20.36584-9.521864-41.723264-9.521864-63.862493C402.328693 476.632491 517.908058 368.541681 664.250054 368.541681z" fill="currentColor"/><circle cx="283" cy="324" r="38" fill="currentColor"/><circle cx="499" cy="324" r="38" fill="currentColor"/></svg>
+              微信咨询
+            </button>
+            <div class="wechat-cta-popup">
+              <img src="@/assets/wechat-qrcode.jpg" alt="微信二维码" class="qrcode-img" />
+              <p class="qrcode-tip">扫码添加微信</p>
+            </div>
+          </div>
         </div>
+        <div class="cta-links fade-in-up" style="animation-delay:0.3s">
+          <a href="https://qm.qq.com/cgi-bin/qm/qr?k=zzJ02JO6xDIwtgLFF2ZNmtIIXQKKk81j&jump_from=webapi&authKey=RJGZ5O+qA/qe7pkDbICLL3VOd1dzVmeyDGACjsinraACAO0my9W9qitkjmXpfBxf" target="_blank" rel="noopener noreferrer" class="cta-link">加入QQ群</a>
+          <RouterLink to="/contact" class="cta-link">更多联系方式</RouterLink>
+        </div>
+        <p class="cta-note fade-in-up" style="animation-delay:0.35s">💡 闲鱼下单享平台担保，安全放心；QQ/微信适合长期合作</p>
       </div>
     </section>
   </main>
@@ -113,6 +131,13 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useIntersectionObserver } from '@/composables/useIntersectionObserver.js'
+
+const qqCopied = ref(false)
+const copyQQ = async () => {
+  try { await navigator.clipboard.writeText('3230801354') } catch { const t = document.createElement('textarea'); t.value = '3230801354'; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t) }
+  qqCopied.value = true
+  setTimeout(() => { qqCopied.value = false }, 2000)
+}
 
 const currentView = ref('ALL')
 const productsRef = ref(null)
@@ -342,13 +367,33 @@ function handleProductClick(product, event) {
   text-decoration: none; font-weight: 500; transition: all var(--duration-normal) ease;
 }
 .cta-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--glow-accent-soft); }
-.cta-secondary {
-  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem;
-  background: var(--bg-warm-gray-200); color: var(--text-primary); border: 1.5px solid transparent;
-  border-radius: var(--radius-full); text-decoration: none; font-weight: 500;
-  transition: all var(--duration-normal) var(--ease-out);
+.xianyu-btn { background: #f2dc2c; color: #854d0e; }
+.xianyu-btn:hover { background: #eab308; color: #854d0e; box-shadow: 0 4px 16px rgba(234,179,8,0.3); }
+.qq-btn { background: #12b7f5; }
+.qq-btn:hover { background: #0ea5e9; box-shadow: 0 4px 16px rgba(14,165,233,0.3); }
+.wechat-btn { background: #07c160; }
+.wechat-btn:hover { background: #06ae56; box-shadow: 0 4px 16px rgba(6,190,86,0.3); }
+.wechat-cta-wrapper { position: relative; }
+.wechat-cta-popup {
+  position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(4px);
+  opacity: 0; visibility: hidden; pointer-events: none;
+  padding: 10px; background: white; border-radius: 12px; border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 200; min-width: 140px;
+  transition: all 0.3s ease;
 }
-.cta-secondary:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(149,149,149,.20); }
+.wechat-cta-popup::after {
+  content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: white;
+}
+.wechat-cta-wrapper:hover .wechat-cta-popup {
+  opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0);
+}
+.wechat-cta-popup .qrcode-img { display: block; width: 120px; height: 120px; object-fit: contain; border-radius: 6px; }
+.wechat-cta-popup .qrcode-tip { margin-top: 6px; font-size: 0.7rem; color: #6b7280; text-align: center; }
+.cta-links { display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin-top: 1.25rem; }
+.cta-link { font-size: 0.875rem; color: var(--text-secondary); text-decoration: none; transition: color 0.2s; }
+.cta-link:hover { color: var(--accent); }
+.cta-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem; text-align: center; }
 
 /* ── 响应式 ── */
 @media (max-width: 768px) {
@@ -356,5 +401,11 @@ function handleProductClick(product, event) {
   .section { padding: var(--space-12) 0; }
   .empty-state { padding: 2.5rem 1rem; }
   .products-grid { grid-template-columns: 1fr; }
+  .cta-btns { flex-direction: column; gap: 0.75rem; }
+  .cta-primary { width: 100%; justify-content: center; }
+  .cta-links { flex-direction: column; gap: 0.75rem; }
+  .wechat-cta-popup { left: auto; right: 0; transform: translateY(4px); }
+  .wechat-cta-wrapper:hover .wechat-cta-popup { transform: translateY(0); }
+  .wechat-cta-popup::after { left: auto; right: 16px; transform: none; }
 }
 </style>

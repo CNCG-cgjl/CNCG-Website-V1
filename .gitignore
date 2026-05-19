@@ -17,6 +17,14 @@ dist-ssr
 .env.local
 .env.*.local
 
+# Backup archives
+*.zip
+*.tar.gz
+*.rar
+
+# Config files with sensitive data
+feishu_permissions.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

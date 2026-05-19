@@ -21,6 +21,7 @@
             </button>
           </div>
         </div>
+        <input v-model="form.website" type="text" tabindex="-1" autocomplete="off" class="hp-field" aria-hidden="true" />
         <div class="form-field">
           <textarea v-model="form.content" placeholder="写点什么吧... *" required maxlength="500" rows="2" class="field-textarea"></textarea>
           <span v-if="form.content" class="char-count">{{ form.content.length }}/500</span>
@@ -68,7 +69,7 @@ const submitting = ref(false)
 const messages = ref([])
 const successMsg = ref('')
 
-const form = ref({ authorName: '', content: '' })
+const form = ref({ authorName: '', content: '', website: '' })
 
 async function loadMessages() {
   loading.value = true
@@ -85,11 +86,13 @@ async function handleSubmit() {
   try {
     const newMsg = await addMessage({
       authorName: form.value.authorName,
-      content: form.value.content
+      content: form.value.content,
+      website: form.value.website
     })
 
     messages.value.unshift({ ...newMsg, is_approved: false })
     form.value.content = ''
+    form.value.website = ''
     successMsg.value = '留言已提交，审核后将显示 ✨'
     setTimeout(() => { successMsg.value = '' }, 5000)
   } catch (err) {
@@ -126,6 +129,14 @@ onMounted(loadMessages)
   border: 1.5px solid var(--border); border-radius: var(--radius-md);
   font-size: 0.85rem; color: var(--text-primary); outline: none;
   transition: border-color 0.2s, box-shadow 0.2s; font-family: inherit;
+}
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 .field-input:focus, .field-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(6,182,212,0.15); }
 .field-input::placeholder, .field-textarea::placeholder { color: var(--text-muted); }

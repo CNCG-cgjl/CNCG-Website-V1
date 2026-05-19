@@ -4,7 +4,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { escapeHtml, escapeAttr } from '@/utils/sanitize'
+import { escapeAttr, escapeHtml } from '@/utils/sanitize'
 
 const props = defineProps({
   blocks: {
@@ -18,127 +18,177 @@ const renderedHtml = computed(() => {
     return '<p class="empty">暂无内容</p>'
   }
 
-  return props.blocks.map(block => renderBlock(block)).join('')
+  const blockMap = buildBlockMap(props.blocks)
+  const root = props.blocks.find(block => block?.block_type === 1)
+  const rootIds = Array.isArray(root?.children) ? root.children : []
+  const topLevelBlocks = rootIds.length
+    ? rootIds.map(id => blockMap.get(id)).filter(Boolean)
+    : props.blocks.filter(block => block?.block_type !== 1)
+
+  return renderSequence(topLevelBlocks, blockMap)
 })
 
-function renderBlock(block) {
+function buildBlockMap(blocks) {
+  const map = new Map()
+  blocks.forEach(block => {
+    if (block?.block_id) {
+      map.set(block.block_id, block)
+    }
+  })
+  return map
+}
+
+function renderBlocks(blocks, blockMap) {
+  return blocks.map(block => renderBlock(block, blockMap)).join('')
+}
+
+function renderSequence(blocks, blockMap) {
+  let html = ''
+
+  for (let index = 0; index < blocks.length; index += 1) {
+    const block = blocks[index]
+    if (!block) continue
+
+    if (isListType(block.block_type)) {
+      const listType = block.block_type
+      const grouped = [block]
+      while (index + 1 < blocks.length && blocks[index + 1]?.block_type === listType) {
+        grouped.push(blocks[index + 1])
+        index += 1
+      }
+      html += renderGroupedList(grouped, blockMap)
+      continue
+    }
+
+    html += renderBlock(block, blockMap)
+  }
+
+  return html
+}
+
+function renderBlock(block, blockMap) {
   if (!block) return ''
 
   const type = block.block_type
-  const children = block.children || []
+  const children = resolveChildren(block, blockMap)
 
   switch (type) {
     case 2:
       return renderParagraph(block)
     case 3:
-      return renderHeading(block, 1)
+      return renderHeading(block, 1, children, blockMap)
     case 4:
-      return renderHeading(block, 2)
+      return renderHeading(block, 2, children, blockMap)
     case 5:
-      return renderHeading(block, 3)
+      return renderHeading(block, 3, children, blockMap)
     case 6:
-      return renderHeading(block, 4)
+      return renderHeading(block, 4, children, blockMap)
     case 7:
-      return renderHeading(block, 5)
+      return renderHeading(block, 5, children, blockMap)
     case 8:
-      return renderHeading(block, 6)
-    case 9:
-      return renderBulletList(block, children)
-    case 10:
-      return renderOrderedList(block, children)
-    case 11:
-      return renderCode(block)
+      return renderHeading(block, 6, children, blockMap)
     case 12:
-      return renderQuote(block)
+      return renderGroupedList([block], blockMap)
     case 13:
-      return renderDivider()
+      return renderGroupedList([block], blockMap)
     case 14:
-      return renderTable(block)
+      return renderCode(block)
     case 15:
+      return renderQuote(block, children, blockMap)
+    case 19:
+      return renderCallout(block, children, blockMap)
+    case 22:
+      return renderDivider()
+    case 27:
       return renderImage(block)
-    case 16:
-      return renderCallout(block)
+    case 31:
+      return renderTable(block)
     case 17:
-      return renderTodoList(block, children)
+      return renderGroupedList([block], blockMap)
+    case 34:
+      return renderQuote(block, children, blockMap)
     default:
-      return renderText(block)
+      return renderFallback(block, children, blockMap)
   }
 }
 
+function resolveChildren(block, blockMap) {
+  if (!Array.isArray(block?.children)) return []
+  return block.children
+    .map(child => (typeof child === 'string' ? blockMap.get(child) : child))
+    .filter(Boolean)
+}
+
 function renderParagraph(block) {
-  const elements = block.text?.elements || []
-  const content = elements.map(el => renderTextElement(el)).join('')
-  return content ? `<p>${content}</p>` : '<br>'
+  const content = renderInlineText(block)
+  return content ? `<p>${content}</p>` : '<p class="spacer" aria-hidden="true"></p>'
 }
 
-function renderHeading(block, level) {
-  const elements = block.text?.elements || []
-  const content = elements.map(el => renderTextElement(el)).join('')
-  return content ? `<h${level}>${content}</h${level}>` : ''
+function renderHeading(block, level, children, blockMap) {
+  const content = renderInlineText(block)
+  const title = content ? `<h${level}>${content}</h${level}>` : ''
+  return `${title}${renderSequence(children, blockMap)}`
 }
 
-function renderBulletList(block, children) {
-  if (!children || !children.length) return ''
+function renderGroupedList(blocks, blockMap) {
+  if (!blocks.length) return ''
 
-  const items = children
-    .filter(child => child.block_type === 10)
-    .map(child => {
-      const elements = child.text?.elements || []
-      const content = elements.map(el => renderTextElement(el)).join('')
-      return `<li>${content}</li>`
-    })
-    .join('')
+  const firstType = blocks[0].block_type
+  if (firstType === 17) {
+    return renderTodoList(blocks, blockMap)
+  }
 
-  return `<ul>${items}</ul>`
+  const tag = firstType === 13 ? 'ol' : 'ul'
+  const items = blocks.map(block => renderListItem(block, blockMap)).filter(Boolean).join('')
+  return items ? `<${tag}>${items}</${tag}>` : ''
 }
 
-function renderOrderedList(block, children) {
-  if (!children || !children.length) return ''
+function renderListItem(block, blockMap) {
+  if (!block) return ''
 
-  const items = children
-    .filter(child => child.block_type === 10)
-    .map(child => {
-      const elements = child.text?.elements || []
-      const content = elements.map(el => renderTextElement(el)).join('')
-      return `<li>${content}</li>`
-    })
-    .join('')
+  const content = renderInlineText(block)
+  const children = resolveChildren(block, blockMap)
+  const nested = renderSequence(children, blockMap)
 
-  return `<ol>${items}</ol>`
+  if (!content && !nested) return ''
+  return `<li>${content}${nested}</li>`
 }
 
-function renderTodoList(block, children) {
-  if (!children || !children.length) return ''
-
-  const items = children
-    .filter(child => child.block_type === 18)
+function renderTodoList(blocks, blockMap) {
+  const items = blocks
     .map(child => {
       const done = child.todo?.done || false
-      const elements = child.text?.elements || []
-      const content = elements.map(el => renderTextElement(el)).join('')
+      const content = renderInlineText(child)
+      const nested = renderSequence(resolveChildren(child, blockMap), blockMap)
+
+      if (!content && !nested) return ''
+
       const checkbox = done
         ? '<input type="checkbox" checked disabled>'
         : '<input type="checkbox" disabled>'
       const className = done ? 'checked' : ''
-      return `<li class="${className}">${checkbox}${content}</li>`
+
+      return `<li class="${className}"><span class="todo-row">${checkbox}<span>${content}</span></span>${nested}</li>`
     })
+    .filter(Boolean)
     .join('')
 
-  return `<ul class="todo-list">${items}</ul>`
+  return items ? `<ul class="todo-list">${items}</ul>` : ''
 }
 
 function renderCode(block) {
-  const elements = block.text?.elements || []
-  const content = elements.map(el => escapeHtml(el.text_run?.content || '')).join('')
+  const content = (block.text?.elements || [])
+    .map(el => escapeHtml(el.text_run?.content || ''))
+    .join('')
   const language = escapeAttr(block.code?.language || 'plain')
 
   return `<pre><code class="language-${language}">${content}</code></pre>`
 }
 
-function renderQuote(block) {
-  const elements = block.text?.elements || []
-  const content = elements.map(el => renderTextElement(el)).join('')
-  return content ? `<blockquote>${content}</blockquote>` : ''
+function renderQuote(block, children, blockMap) {
+  const content = renderInlineText(block)
+  const body = renderSequence(children, blockMap)
+  return content || body ? `<blockquote>${content}${body}</blockquote>` : ''
 }
 
 function renderDivider() {
@@ -174,17 +224,48 @@ function renderImage(block) {
   return `<img src="/api/feishu?action=image&token=${encodeURIComponent(token)}" alt="图片" class="content-image" loading="lazy" referrerpolicy="no-referrer" />`
 }
 
-function renderCallout(block) {
-  const elements = block.text?.elements || []
-  const content = elements.map(el => renderTextElement(el)).join('')
+function renderCallout(block, children, blockMap) {
+  const content = renderInlineText(block)
   const emojiId = escapeHtml(block.callout?.emoji_id || '')
+  const body = renderSequence(children, blockMap)
 
-  return `<div class="callout">${emojiId ? `<span class="emoji">${emojiId}</span>` : ''}<div class="callout-content">${content}</div></div>`
+  if (!content && !body) return ''
+
+  return `<div class="callout">${emojiId ? `<span class="emoji">${emojiId}</span>` : ''}<div class="callout-content">${content}${body}</div></div>`
 }
 
-function renderText(block) {
-  const elements = block.text?.elements || []
+function renderFallback(block, children, blockMap) {
+  const content = renderInlineText(block)
+  const body = renderSequence(children, blockMap)
+
+  if (content && body) return `<div class="block-group"><p>${content}</p>${body}</div>`
+  if (content) return `<p>${content}</p>`
+  return body
+}
+
+function renderInlineText(block) {
+  const elements =
+    block?.text?.elements ||
+    block?.bullet?.elements ||
+    block?.ordered?.elements ||
+    block?.heading1?.elements ||
+    block?.heading2?.elements ||
+    block?.heading3?.elements ||
+    block?.heading4?.elements ||
+    block?.heading5?.elements ||
+    block?.heading6?.elements ||
+    block?.heading7?.elements ||
+    block?.heading8?.elements ||
+    block?.heading9?.elements ||
+    block?.quote?.elements ||
+    block?.callout?.elements ||
+    block?.todo?.elements ||
+    []
   return elements.map(el => renderTextElement(el)).join('')
+}
+
+function isListType(type) {
+  return type === 12 || type === 13 || type === 17
 }
 
 function renderTextElement(element) {
@@ -196,60 +277,58 @@ function renderTextElement(element) {
 
   if (text_run) {
     content = escapeHtml(text_run.content || '')
-    if (text_run.text_style?.bold) {
-      content = `<strong>${content}</strong>`
-    }
-    if (text_run.text_style?.italic) {
-      content = `<em>${content}</em>`
-    }
-    if (text_run.text_style?.code) {
-      content = `<code>${content}</code>`
-    }
-    if (text_run.text_style?.strikethrough) {
-      content = `<s>${content}</s>`
-    }
-    if (text_run.text_style?.underline) {
-      content = `<u>${content}</u>`
-    }
-  } else if (mention) {
-    content = `<span class="mention">@${escapeHtml(mention.mention_name || '用户')}</span>`
-  } else if (text_link) {
-    const url = escapeAttr(text_link.url || '')
-    const text = escapeHtml(text_link.text || url)
-    content = `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`
+    if (text_run.text_style?.bold) content = `<strong>${content}</strong>`
+    if (text_run.text_style?.italic) content = `<em>${content}</em>`
+    if (text_run.text_style?.code) content = `<code>${content}</code>`
+    if (text_run.text_style?.strikethrough) content = `<s>${content}</s>`
+    if (text_run.text_style?.underline) content = `<u>${content}</u>`
+    return content
   }
 
-  return content
+  if (mention) {
+    return `<span class="mention">@${escapeHtml(mention.mention_name || '用户')}</span>`
+  }
+
+  if (text_link) {
+    const url = escapeAttr(text_link.url || '')
+    const text = escapeHtml(text_link.text || url)
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`
+  }
+
+  return ''
 }
 </script>
 
 <style scoped>
 .feishu-content {
-  line-height: 1.8;
+  line-height: 1.72;
   color: var(--text-secondary);
+  font-size: 0.98rem;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .feishu-content :deep(h1) {
-  font-size: 1.75rem;
+  font-size: 1.62rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 2rem 0 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--border);
+  margin: 0 0 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .feishu-content :deep(h2) {
-  font-size: 1.35rem;
+  font-size: 1.24rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 1.75rem 0 0.75rem;
+  margin: 1.35rem 0 0.65rem;
 }
 
 .feishu-content :deep(h3) {
-  font-size: 1.1rem;
+  font-size: 1.06rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 1.5rem 0 0.5rem;
+  margin: 1.1rem 0 0.45rem;
 }
 
 .feishu-content :deep(h4),
@@ -258,12 +337,23 @@ function renderTextElement(element) {
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 1.25rem 0 0.5rem;
+  margin: 1rem 0 0.4rem;
 }
 
 .feishu-content :deep(p) {
-  margin: 0.75rem 0;
-  line-height: 1.8;
+  margin: 0.55rem 0;
+  line-height: 1.72;
+  color: inherit;
+}
+
+.feishu-content :deep(.block-group) {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.feishu-content :deep(p.spacer) {
+  min-height: 0.75rem;
+  margin: 0;
 }
 
 .feishu-content :deep(a) {
@@ -286,7 +376,7 @@ function renderTextElement(element) {
 }
 
 .feishu-content :deep(pre) {
-  margin: 1rem 0;
+  margin: 0.85rem 0;
   padding: 1rem;
   background: var(--bg-secondary);
   border-radius: var(--radius-md);
@@ -302,13 +392,19 @@ function renderTextElement(element) {
 
 .feishu-content :deep(ul),
 .feishu-content :deep(ol) {
-  margin: 0.75rem 0;
-  padding-left: 1.5rem;
+  margin: 0.6rem 0 0.85rem;
+  padding-left: 1.35rem;
 }
 
 .feishu-content :deep(li) {
-  margin: 0.35rem 0;
-  line-height: 1.7;
+  margin: 0.28rem 0;
+  line-height: 1.65;
+  color: inherit;
+}
+
+.feishu-content :deep(li > ul),
+.feishu-content :deep(li > ol) {
+  margin-top: 0.45rem;
 }
 
 .feishu-content :deep(.todo-list) {
@@ -317,6 +413,11 @@ function renderTextElement(element) {
 }
 
 .feishu-content :deep(.todo-list li) {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.feishu-content :deep(.todo-row) {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
@@ -333,7 +434,7 @@ function renderTextElement(element) {
 }
 
 .feishu-content :deep(blockquote) {
-  margin: 1rem 0;
+  margin: 0.9rem 0;
   padding: 0.75rem 1rem;
   border-left: 4px solid var(--accent);
   background: var(--bg-secondary);
@@ -342,7 +443,7 @@ function renderTextElement(element) {
 }
 
 .feishu-content :deep(hr) {
-  margin: 2rem 0;
+  margin: 1.4rem 0;
   border: none;
   border-top: 1px solid var(--border);
 }
@@ -369,14 +470,14 @@ function renderTextElement(element) {
 
 .feishu-content :deep(img.content-image) {
   max-width: 100%;
-  margin: 1rem 0;
+  margin: 0.9rem 0;
   border-radius: var(--radius-md);
 }
 
 .feishu-content :deep(.callout) {
   display: flex;
   gap: 0.75rem;
-  margin: 1rem 0;
+  margin: 0.9rem 0;
   padding: 0.85rem 1rem;
   background: var(--bg-secondary);
   border-radius: var(--radius-md);
@@ -403,5 +504,31 @@ function renderTextElement(element) {
   text-align: center;
   color: var(--text-muted);
   padding: 3rem 0;
+}
+
+[data-theme="dark"] .feishu-content {
+  color: rgba(224, 232, 241, 0.88);
+}
+
+[data-theme="dark"] .feishu-content :deep(h1),
+[data-theme="dark"] .feishu-content :deep(h2),
+[data-theme="dark"] .feishu-content :deep(h3),
+[data-theme="dark"] .feishu-content :deep(h4),
+[data-theme="dark"] .feishu-content :deep(h5),
+[data-theme="dark"] .feishu-content :deep(h6) {
+  color: rgba(246, 248, 251, 0.97);
+}
+
+[data-theme="dark"] .feishu-content :deep(blockquote),
+[data-theme="dark"] .feishu-content :deep(pre),
+[data-theme="dark"] .feishu-content :deep(.callout),
+[data-theme="dark"] .feishu-content :deep(th) {
+  background: rgba(54, 67, 87, 0.38);
+  border-color: rgba(163, 177, 198, 0.14);
+}
+
+[data-theme="dark"] .feishu-content :deep(code) {
+  background: rgba(54, 67, 87, 0.42);
+  color: rgba(134, 239, 172, 0.95);
 }
 </style>

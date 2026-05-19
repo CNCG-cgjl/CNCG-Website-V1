@@ -84,10 +84,9 @@
           无论是网站开发、技术咨询，还是内容创作，我都可以帮您落地。
         </p>
         <div class="cta-btns fade-in-up" style="animation-delay:0.2s">
-          <a href="https://wpa.qq.com/msgrd?v=3&uin=3230801354&site=qq&menu=yes"
-             target="_blank" rel="noopener noreferrer" class="cta-primary">
-            QQ 联系我
-          </a>
+          <button class="cta-primary" @click="copyQQ">
+            QQ: 3230801354 {{ qqCopied ? '(已复制!)' : '' }}
+          </button>
           <RouterLink to="/shop" class="cta-secondary">浏览店铺</RouterLink>
         </div>
       </div>
@@ -102,6 +101,17 @@ import { useIntersectionObserver } from '@/composables/useIntersectionObserver.j
 const introRef = ref(null)
 const highlightsRef = ref(null)
 const skillsRef = ref(null)
+const qqCopied = ref(false)
+
+const copyQQ = async () => {
+  try {
+    await navigator.clipboard.writeText('3230801354')
+  } catch {
+    const t = document.createElement('textarea'); t.value = '3230801354'; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t)
+  }
+  qqCopied.value = true
+  setTimeout(() => { qqCopied.value = false }, 2000)
+}
 
 const { isVisible: introVisible } = useIntersectionObserver(introRef, { threshold: 0.15 })
 const { isVisible: highlightsVisible } = useIntersectionObserver(highlightsRef, { threshold: 0.1 })

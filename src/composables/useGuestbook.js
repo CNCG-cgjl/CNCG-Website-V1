@@ -1,40 +1,37 @@
-import { supabase, isSupabaseReady } from '@/lib/supabase'
+import { isSupabaseReady } from '@/lib/supabase'
 
 export function useGuestbook() {
   async function fetchMessages(limit = 50) {
     if (!isSupabaseReady) return []
 
-    const { data, error } = await supabase
-      .from('guestbook')
-      .select('id, author_name, content, created_at')
-      .eq('is_approved', true)
-      .order('created_at', { ascending: false })
-      .limit(limit)
-
-    if (error) {
+    try {
+      const response = await fetch(`/api/guestbook?limit=${encodeURIComponent(limit)}`)
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || '获取留言失败')
+      return result.data || []
+    } catch (error) {
       console.error('获取留言失败:', error)
       return []
     }
-
-    return data || []
   }
 
-  async function addMessage({ authorName, content }) {
+  async function addMessage({ authorName, content, website = '' }) {
     if (!isSupabaseReady) throw new Error('Supabase 未配置')
 
-    const { data, error } = await supabase
-      .from('guestbook')
-      .insert({
-        author_name: authorName.trim(),
+    const response = await fetch('/api/guestbook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        authorName: authorName.trim(),
         content: content.trim(),
-        is_approved: false,
+        website
       })
-      .select('id, author_name, content, created_at')
-      .single()
+    })
 
-    if (error) throw new Error(error.message)
+    const result = await response.json()
+    if (!response.ok) throw new Error(result.error || '留言提交失败')
 
-    return data
+    return result.data
   }
 
   return { fetchMessages, addMessage }

@@ -1,19 +1,9 @@
 import { ref, computed } from 'vue'
-import { feishuProxy, getWikiNodes, getDocument, getDocumentContent, getDocumentsList } from '@/utils/feishuProxy'
+import { feishuProxy, getDocument, getDocumentContent, getDocumentsList, getWikiRoot } from '@/utils/feishuProxy'
 
 export function useFeishu() {
   const loading = ref(false)
   const error = ref(null)
-
-  const getAccessToken = async () => {
-    try {
-      const result = await feishuProxy('token')
-      return result.data?.token || ''
-    } catch (err) {
-      error.value = err.message
-      throw err
-    }
-  }
 
   const fetchDocuments = async (folderToken = '') => {
     loading.value = true
@@ -43,12 +33,12 @@ export function useFeishu() {
     }
   }
 
-  const fetchKnowledgeBase = async (spaceId) => {
+  const fetchWikiRoot = async () => {
     loading.value = true
     error.value = null
 
     try {
-      return await getWikiNodes(spaceId)
+      return await getWikiRoot()
     } catch (err) {
       error.value = err.message
       throw err
@@ -60,9 +50,8 @@ export function useFeishu() {
   return {
     loading: computed(() => loading.value),
     error: computed(() => error.value),
-    getAccessToken,
     fetchDocuments,
     fetchDocumentContent,
-    fetchKnowledgeBase
+    fetchWikiRoot
   }
 }

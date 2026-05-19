@@ -1,43 +1,40 @@
-import { supabase, isSupabaseReady } from '@/lib/supabase'
+import { isSupabaseReady } from '@/lib/supabase'
 
 export function useComments() {
   async function fetchComments(pageId) {
     if (!isSupabaseReady) return []
 
-    const { data, error } = await supabase
-      .from('comments')
-      .select('id, author_name, author_email, content, created_at, parent_id')
-      .eq('page_id', pageId)
-      .eq('is_approved', true)
-      .order('created_at', { ascending: true })
-
-    if (error) {
+    try {
+      const response = await fetch(`/api/comments?page_id=${encodeURIComponent(pageId)}`)
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || '获取评论失败')
+      return result.data || []
+    } catch (error) {
       console.error('获取评论失败:', error)
       return []
     }
-
-    return data || []
   }
 
-  async function addComment(pageId, { authorName, authorEmail, content, parentId = null }) {
+  async function addComment(pageId, { authorName, authorEmail, content, parentId = null, website = '' }) {
     if (!isSupabaseReady) throw new Error('Supabase 未配置')
 
-    const { data, error } = await supabase
-      .from('comments')
-      .insert({
-        page_id: pageId,
-        author_name: authorName.trim(),
-        author_email: authorEmail.trim(),
+    const response = await fetch('/api/comments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pageId,
+        authorName: authorName.trim(),
+        authorEmail: authorEmail.trim(),
         content: content.trim(),
-        parent_id: parentId,
-        is_approved: false,
+        parentId,
+        website
       })
-      .select('id, author_name, content, created_at, parent_id')
-      .single()
+    })
 
-    if (error) throw new Error(error.message)
+    const result = await response.json()
+    if (!response.ok) throw new Error(result.error || '评论提交失败')
 
-    return data
+    return result.data
   }
 
   function organizeComments(comments) {
