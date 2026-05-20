@@ -9,7 +9,8 @@ function normalizeMessage(row) {
     id: row.id,
     author_name: row.author_name,
     content: row.content,
-    created_at: row.created_at
+    created_at: row.created_at,
+    review_status: row.review_status || 'pending'
   }
 }
 
@@ -41,15 +42,31 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100)
+    const status = String(req.query.status || 'approved').toLowerCase()
+
+    // Validate status parameter
+    const validStatuses = ['approved', 'pending', 'rejected', 'spam', 'all']
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status parameter' })
+    }
 
     try {
       const supabase = getServiceSupabase()
-      const { data, error } = await supabase
+      let query = supabase
         .from('guestbook')
-        .select('id, author_name, content, created_at')
-        .eq('is_approved', true)
+        .select('id, author_name, content, created_at, review_status')
         .order('created_at', { ascending: false })
         .limit(limit)
+
+      // Filter by review_status if specified
+      if (status !== 'all') {
+        query = query.eq('review_status', status)
+      } else {
+        // For 'all', only show approved and pending (not rejected/spam)
+        query = query.in('review_status', ['approved', 'pending'])
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
       return res.status(200).json({ code: 0, data: data || [] })
@@ -86,16 +103,17 @@ export default async function handler(req, res) {
       .insert({
         author_name: payload.authorName,
         content: payload.content,
-        is_approved: false
+        review_status: 'pending'
       })
-      .select('id, author_name, content, created_at')
+      .select('id, author_name, content, created_at, review_status')
       .single()
 
     if (error) throw error
 
     const message = formatUpdateMessage('new_guestbook', {
       author: payload.authorName,
-      content: payload.content
+      content: payload.content,
+      status: 'pending'
     })
     notify(message).catch(err => console.error('Guestbook notification failed:', err))
 

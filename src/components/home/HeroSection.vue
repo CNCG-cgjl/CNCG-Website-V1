@@ -130,11 +130,33 @@
         <span class="scroll-text">向下滚动</span>
       </div>
     </div>
+
+    <!-- 音频响应控制按钮 -->
+    <button 
+      class="audio-toggle-btn fade-in-up" 
+      style="animation-delay: 0.75s"
+      @click="toggleAudio"
+      :class="{ active: audioEnabled }"
+      :title="audioEnabled ? '关闭音频响应' : '开启音频响应'"
+    >
+      <svg v-if="!audioEnabled" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 18V5l12-2v13"></path>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="16" r="3"></circle>
+      </svg>
+      <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+      </svg>
+      <span class="audio-label">{{ audioEnabled ? '音频响应中' : '音频响应' }}</span>
+      <span v-if="audioEnabled" class="audio-pulse"></span>
+    </button>
   </section>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -143,10 +165,247 @@ const isFocused = ref(false)
 
 const hotTags = ['Vue 3', '网站开发', '技术咨询', '飞书', '闲鱼店铺']
 
+// 音频响应相关
+const audioEnabled = ref(false)
+const audioContext = ref(null)
+const analyser = ref(null)
+const dataArray = ref(null)
+const animationId = ref(null)
+const audioSource = ref(null)
+
 function handleSearch() {
   if (!query.value.trim()) return
   router.push({ path: '/note', query: { q: query.value.trim() } })
 }
+
+// 初始化音频上下文
+async function initAudio() {
+  try {
+    // 请求麦克风权限
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    
+    // 创建音频上下文
+    audioContext.value = new (window.AudioContext || window.webkitAudioContext)()
+    analyser.value = audioContext.value.createAnalyser()
+    analyser.value.fftSize = 256
+    
+    const bufferLength = analyser.value.frequencyBinCount
+    dataArray.value = new Uint8Array(bufferLength)
+    
+    // 连接音频源
+    audioSource.value = audioContext.value.createMediaStreamSource(stream)
+    audioSource.value.connect(analyser.value)
+    
+    audioEnabled.value = true
+    
+    // 开始音频可视化循环
+    visualize()
+  } catch (error) {
+    console.error('音频初始化失败:', error)
+    alert('无法访问麦克风，请检查浏览器权限设置')
+  }
+}
+
+// 停止音频
+function stopAudio() {
+  if (animationId.value) {
+    cancelAnimationFrame(animationId.value)
+  }
+  
+  if (audioSource.value && audioSource.value.mediaStream) {
+    audioSource.value.mediaStream.getTracks().forEach(track => track.stop())
+  }
+  
+  if (audioContext.value) {
+    audioContext.value.close()
+  }
+  
+  audioEnabled.value = false
+  
+  // 重置所有元素样式
+  resetVisuals()
+}
+
+// 音频可视化主循环
+function visualize() {
+  animationId.value = requestAnimationFrame(visualize)
+  
+  if (!analyser.value || !dataArray.value) return
+  
+  analyser.value.getByteFrequencyData(dataArray.value)
+  
+  // 计算不同频段的平均值
+  const bass = getAverageFrequency(0, 10) // 低频
+  const mid = getAverageFrequency(10, 40) // 中频
+  const treble = getAverageFrequency(40, 100) // 高频
+  const overall = getAverageFrequency(0, 100) // 整体
+  
+  // 更新视觉元素
+  updateOrbits(bass, mid, treble)
+  updateParticles(overall)
+  updateBlobs(bass, mid, treble)
+  updateNodes(mid)
+  updateSparkles(treble)
+}
+
+// 获取频段平均值（0-255）
+function getAverageFrequency(start, end) {
+  if (!dataArray.value) return 0
+  let sum = 0
+  const count = end - start
+  for (let i = start; i < end; i++) {
+    sum += dataArray.value[i]
+  }
+  return sum / count / 255 // 归一化到 0-1
+}
+
+// 更新圆环
+function updateOrbits(bass, mid, treble) {
+  const orbit1 = document.querySelector('.cyber-orbit.o-1')
+  const orbit2 = document.querySelector('.cyber-orbit.o-2')
+  const orbit3 = document.querySelector('.cyber-orbit.o-3')
+  
+  if (orbit1) {
+    const scale = 1 + bass * 0.15
+    const opacity = 0.12 + bass * 0.2
+    orbit1.style.transform = `scale(${scale})`
+    orbit1.style.opacity = opacity
+    orbit1.style.strokeWidth = 0.5 + bass * 1.5
+  }
+  
+  if (orbit2) {
+    const scale = 1 + mid * 0.12
+    const opacity = 0.09 + mid * 0.18
+    orbit2.style.transform = `scale(${scale})`
+    orbit2.style.opacity = opacity
+    orbit2.style.strokeWidth = 0.5 + mid * 1.2
+  }
+  
+  if (orbit3) {
+    const scale = 1 + treble * 0.1
+    const opacity = 0.06 + treble * 0.15
+    orbit3.style.transform = `scale(${scale})`
+    orbit3.style.opacity = opacity
+    orbit3.style.strokeWidth = 0.5 + treble * 1
+  }
+}
+
+// 更新粒子
+function updateParticles(intensity) {
+  const particles = document.querySelectorAll('.particle')
+  particles.forEach((particle, index) => {
+    const scale = 1 + intensity * 2
+    const opacity = 0.7 + intensity * 0.3
+    particle.style.transform = `scale(${scale})`
+    particle.style.opacity = opacity
+    
+    // 根据强度改变滤镜
+    const blur = 4 + intensity * 8
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const colors = isDark 
+      ? ['74,222,128', '34,211,238', '167,139,250']
+      : ['167,139,250', '244,114,182', '96,165,250']
+    const color = colors[index % colors.length]
+    particle.style.filter = `drop-shadow(0 0 ${blur}px rgba(${color},${0.5 + intensity * 0.5}))`
+  })
+}
+
+// 更新光斑
+function updateBlobs(bass, mid, treble) {
+  const blob1 = document.querySelector('.hero-blob.b-1')
+  const blob2 = document.querySelector('.hero-blob.b-2')
+  const blob3 = document.querySelector('.hero-blob.b-3')
+  
+  if (blob1) {
+    const scale = 1 + bass * 0.2
+    blob1.style.transform = `scale(${scale})`
+    blob1.style.opacity = 0.18 + bass * 0.15
+  }
+  
+  if (blob2) {
+    const scale = 1 + mid * 0.18
+    blob2.style.transform = `scale(${scale})`
+    blob2.style.opacity = 0.12 + mid * 0.12
+  }
+  
+  if (blob3) {
+    const scale = 1 + treble * 0.15
+    blob3.style.transform = `scale(${scale})`
+    blob3.style.opacity = 0.10 + treble * 0.1
+  }
+}
+
+// 更新节点
+function updateNodes(intensity) {
+  const nodes = document.querySelectorAll('.cyber-node')
+  nodes.forEach((node) => {
+    const scale = 1 + intensity * 1.5
+    const opacity = 0.7 + intensity * 0.3
+    node.style.transform = `scale(${scale})`
+    node.style.opacity = opacity
+  })
+}
+
+// 更新星点
+function updateSparkles(intensity) {
+  const sparkles = document.querySelectorAll('.sparkle')
+  sparkles.forEach((sparkle) => {
+    const scale = 1 + intensity * 0.8
+    sparkle.style.transform = `scale(${scale})`
+    sparkle.style.opacity = intensity * 0.9
+  })
+}
+
+// 重置视觉效果
+function resetVisuals() {
+  const orbits = document.querySelectorAll('.cyber-orbit')
+  const particles = document.querySelectorAll('.particle')
+  const blobs = document.querySelectorAll('.hero-blob')
+  const nodes = document.querySelectorAll('.cyber-node')
+  const sparkles = document.querySelectorAll('.sparkle')
+  
+  orbits.forEach(orbit => {
+    orbit.style.transform = ''
+    orbit.style.opacity = ''
+    orbit.style.strokeWidth = ''
+  })
+  
+  particles.forEach(particle => {
+    particle.style.transform = ''
+    particle.style.opacity = ''
+    particle.style.filter = ''
+  })
+  
+  blobs.forEach(blob => {
+    blob.style.transform = ''
+    blob.style.opacity = ''
+  })
+  
+  nodes.forEach(node => {
+    node.style.transform = ''
+    node.style.opacity = ''
+  })
+  
+  sparkles.forEach(sparkle => {
+    sparkle.style.transform = ''
+    sparkle.style.opacity = ''
+  })
+}
+
+// 切换音频响应
+function toggleAudio() {
+  if (audioEnabled.value) {
+    stopAudio()
+  } else {
+    initAudio()
+  }
+}
+
+onUnmounted(() => {
+  if (audioEnabled.value) {
+    stopAudio()
+  }
+})
 </script>
 
 <style scoped>
@@ -583,6 +842,105 @@ function handleSearch() {
 }
 .scroll-text { font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.08em; }
 
+/* ── 音频响应控制按钮 ── */
+.audio-toggle-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(200,195,230,0.45);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(139,92,246,0.08), 0 2px 4px rgba(0,0,0,0.04);
+}
+
+.audio-toggle-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(167,139,250,0.6);
+  box-shadow: 0 8px 24px rgba(139,92,246,0.15), 0 4px 8px rgba(0,0,0,0.06);
+  color: var(--text-primary);
+}
+
+.audio-toggle-btn.active {
+  background: linear-gradient(135deg, rgba(167,139,250,0.15) 0%, rgba(244,114,182,0.12) 100%);
+  border-color: rgba(167,139,250,0.7);
+  color: var(--accent);
+  box-shadow: 0 6px 20px rgba(139,92,246,0.2), 0 3px 6px rgba(0,0,0,0.08);
+}
+
+.audio-toggle-btn.active:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 28px rgba(139,92,246,0.25), 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.audio-label {
+  position: relative;
+  z-index: 1;
+}
+
+.audio-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: rgba(167,139,250,0.3);
+  animation: audioPulse 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes audioPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 0;
+  }
+}
+
+[data-theme="dark"] .audio-toggle-btn {
+  background: rgba(10,10,15,0.65);
+  border-color: rgba(255,255,255,0.1);
+  color: var(--text-muted);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
+}
+
+[data-theme="dark"] .audio-toggle-btn:hover {
+  border-color: rgba(74,222,128,0.4);
+  color: var(--text-secondary);
+  box-shadow: 0 8px 24px rgba(74,222,128,0.15), 0 4px 8px rgba(0,0,0,0.4);
+}
+
+[data-theme="dark"] .audio-toggle-btn.active {
+  background: rgba(74,222,128,0.12);
+  border-color: rgba(74,222,128,0.5);
+  color: var(--accent);
+  box-shadow: 0 6px 20px rgba(74,222,128,0.25), 0 3px 6px rgba(0,0,0,0.3);
+}
+
+[data-theme="dark"] .audio-toggle-btn.active:hover {
+  box-shadow: 0 10px 28px rgba(74,222,128,0.3), 0 4px 10px rgba(0,0,0,0.4);
+}
+
+[data-theme="dark"] .audio-pulse {
+  background: rgba(74,222,128,0.3);
+}
+
 /* =============================================
    响应式
    ============================================= */
@@ -602,6 +960,23 @@ function handleSearch() {
   .cyber-line { stroke-width: 0.5; }
   .cyber-node { display: none; }
   .particle { display: none; }
+
+  /* 移动端音频按钮 */
+  .audio-toggle-btn {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.65rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .audio-label {
+    display: none;
+  }
+  
+  .audio-toggle-btn svg {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 @media (max-width: 1024px) and (min-width: 769px) {

@@ -71,6 +71,98 @@ function extractTitle(block) {
   return elements.map(element => element.text_run?.content || '').join('')
 }
 
+function createJsonResponder(res) {
+  res.status = function status(code) {
+    res.statusCode = code
+    return res
+  }
+
+  res.json = function json(payload) {
+    if (!res.headersSent) {
+      res.setHeader('Content-Type', 'application/json')
+    }
+    res.end(JSON.stringify(payload))
+    return res
+  }
+
+  return res
+}
+
+async function readRequestBody(req) {
+  return await new Promise((resolve, reject) => {
+    let raw = ''
+
+    req.on('data', (chunk) => {
+      raw += chunk
+    })
+
+    req.on('end', () => {
+      if (!raw) {
+        resolve({})
+        return
+      }
+
+      try {
+        resolve(JSON.parse(raw))
+      } catch {
+        reject(new Error('Invalid JSON body'))
+      }
+    })
+
+    req.on('error', reject)
+  })
+}
+
+function localApiDevPlugin() {
+  return {
+    name: 'local-api-dev-adapter',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        if (!req.url?.startsWith('/api/') || req.url.startsWith('/api/feishu')) {
+          return next()
+        }
+
+        const url = new URL(req.url, 'http://localhost')
+        const route = url.pathname
+        const handlers = {
+          '/api/contact': () => import('./api/contact.js'),
+          '/api/guestbook': () => import('./api/guestbook.js')
+        }
+
+        const loadHandler = handlers[route]
+        if (!loadHandler) {
+          return next()
+        }
+
+        createJsonResponder(res)
+
+        try {
+          req.query = Object.fromEntries(url.searchParams.entries())
+          req.body = ['POST', 'PUT', 'PATCH'].includes(req.method || '')
+            ? await readRequestBody(req)
+            : {}
+
+          const mod = await loadHandler()
+          await mod.default(req, res)
+
+          if (!res.writableEnded) {
+            res.end()
+          }
+        } catch (err) {
+          console.error('Local API dev adapter error:', err)
+
+          if (!res.writableEnded) {
+            res.statusCode = err.message === 'Invalid JSON body' ? 400 : 500
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: err.message || 'Internal server error' }))
+          }
+        }
+      })
+    }
+  }
+}
+
 function feishuDevServerPlugin(env) {
   return {
     name: 'feishu-dev-proxy',
@@ -293,11 +385,13 @@ function feishuDevServerPlugin(env) {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  Object.assign(process.env, env)
 
   return {
     plugins: [
       vue(),
       tailwindcss(),
+      localApiDevPlugin(),
       feishuDevServerPlugin(env)
     ],
     resolve: {

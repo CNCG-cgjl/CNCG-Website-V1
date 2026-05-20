@@ -106,6 +106,7 @@
 import { onMounted, ref } from 'vue'
 import { useIntersectionObserver } from '@/composables/useIntersectionObserver.js'
 import { getFeaturedKnowledgeDocs, loadKnowledgeBaseIndex } from '@/utils/knowledgeBase.js'
+import { getAllNotes } from '@/utils/notes.js'
 
 const noteRef = ref(null)
 const docRef = ref(null)
@@ -117,6 +118,23 @@ const docs = ref([])
 const docsLoading = ref(true)
 
 onMounted(async () => {
+  // 加载本地笔记
+  try {
+    const allNotes = getAllNotes()
+    // 只显示最新的 4 篇笔记
+    notes.value = allNotes.slice(0, 4).map(note => ({
+      id: note.slug,
+      slug: note.slug,
+      title: note.title,
+      date: note.dateLabel,
+      tag: note.tags[0] || '笔记'
+    }))
+  } catch (error) {
+    console.error('Failed to load notes:', error)
+    notes.value = []
+  }
+
+  // 加载知识库文档
   try {
     const result = await loadKnowledgeBaseIndex()
     docs.value = getFeaturedKnowledgeDocs(result.groups, 4)

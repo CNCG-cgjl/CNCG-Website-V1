@@ -43,6 +43,7 @@
           <div class="message-body">
             <div class="message-header">
               <span class="message-author">{{ msg.author_name }}</span>
+              <span v-if="msg.pending" class="message-status">待审核</span>
               <span class="message-time">{{ formatTime(msg.created_at) }}</span>
             </div>
             <p class="message-content">{{ msg.content }}</p>
@@ -68,12 +69,40 @@ const loading = ref(false)
 const submitting = ref(false)
 const messages = ref([])
 const successMsg = ref('')
+const pendingStorageKey = 'cncg_guestbook_pending'
 
 const form = ref({ authorName: '', content: '', website: '' })
 
+function readPendingMessages() {
+  if (typeof window === 'undefined') return []
+
+  try {
+    const raw = window.localStorage.getItem(pendingStorageKey)
+    const data = raw ? JSON.parse(raw) : []
+    return Array.isArray(data) ? data : []
+  } catch {
+    return []
+  }
+}
+
+function writePendingMessages(list) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(pendingStorageKey, JSON.stringify(list))
+}
+
+function mergeMessages(serverMessages, pendingMessages) {
+  const approvedIds = new Set((serverMessages || []).map(item => item.id))
+  const stillPending = (pendingMessages || []).filter(item => !approvedIds.has(item.id))
+
+  writePendingMessages(stillPending)
+  return [...stillPending, ...(serverMessages || [])]
+}
+
 async function loadMessages() {
   loading.value = true
-  messages.value = await fetchMessages()
+  const pendingMessages = readPendingMessages()
+  const serverMessages = await fetchMessages()
+  messages.value = mergeMessages(serverMessages, pendingMessages)
   loading.value = false
 }
 
@@ -87,10 +116,14 @@ async function handleSubmit() {
     const newMsg = await addMessage({
       authorName: form.value.authorName,
       content: form.value.content,
-      website: form.value.website
+      website: ''
     })
 
-    messages.value.unshift({ ...newMsg, is_approved: false })
+    const pendingMessage = { ...newMsg, pending: true }
+    const pendingMessages = [pendingMessage, ...readPendingMessages()]
+
+    writePendingMessages(pendingMessages)
+    messages.value = mergeMessages(messages.value.filter(item => !item.pending), pendingMessages)
     form.value.content = ''
     form.value.website = ''
     successMsg.value = '留言已提交，审核后将显示 ✨'
@@ -177,6 +210,16 @@ onMounted(loadMessages)
 .message-body { flex: 1; min-width: 0; }
 .message-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; }
 .message-author { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+.message-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
 .message-time { font-size: 0.72rem; color: var(--text-muted); }
 .message-content { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.7; word-break: break-word; }
 

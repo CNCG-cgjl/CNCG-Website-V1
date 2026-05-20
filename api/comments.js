@@ -12,7 +12,8 @@ function normalizeComment(row) {
     author_name: row.author_name,
     content: row.content,
     created_at: row.created_at,
-    parent_id: row.parent_id
+    parent_id: row.parent_id,
+    review_status: row.review_status || 'pending'
   }
 }
 
@@ -65,18 +66,35 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     const pageId = String(req.query.page_id || '').trim()
+    const status = String(req.query.status || 'approved').toLowerCase()
+
     if (!PAGE_ID_RE.test(pageId)) {
       return res.status(400).json({ error: 'Invalid page_id parameter' })
     }
 
+    // Validate status parameter
+    const validStatuses = ['approved', 'pending', 'rejected', 'spam', 'all']
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status parameter' })
+    }
+
     try {
       const supabase = getServiceSupabase()
-      const { data, error } = await supabase
+      let query = supabase
         .from('comments')
-        .select('id, author_name, content, created_at, parent_id')
+        .select('id, author_name, content, created_at, parent_id, review_status')
         .eq('page_id', pageId)
-        .eq('is_approved', true)
         .order('created_at', { ascending: true })
+
+      // Filter by review_status if specified
+      if (status !== 'all') {
+        query = query.eq('review_status', status)
+      } else {
+        // For 'all', only show approved and pending (not rejected/spam)
+        query = query.in('review_status', ['approved', 'pending'])
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
       return res.status(200).json({ code: 0, data: data || [] })
@@ -116,9 +134,9 @@ export default async function handler(req, res) {
         author_email: payload.authorEmail,
         content: payload.content,
         parent_id: payload.parentId,
-        is_approved: false
+        review_status: 'pending'
       })
-      .select('id, author_name, content, created_at, parent_id')
+      .select('id, author_name, content, created_at, parent_id, review_status')
       .single()
 
     if (error) throw error
@@ -127,7 +145,8 @@ export default async function handler(req, res) {
       author: payload.authorName,
       content: payload.content,
       page: payload.pageId,
-      url: getCommentPath(payload.pageId)
+      url: getCommentPath(payload.pageId),
+      status: 'pending'
     })
     notify(message).catch(err => console.error('Comment notification failed:', err))
 

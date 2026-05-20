@@ -200,3 +200,49 @@ A: 飞书图片需要通过专门的接口获取临时链接。
 ---
 
 **更新时间**: 2026-05-08
+
+---
+
+## Contact Form Bitable Setup
+
+The contact form writes directly to a Feishu Bitable table through the server API in `api/contact.js`.
+
+Required environment variables:
+
+```env
+FEISHU_APP_ID=
+FEISHU_APP_SECRET=
+FEISHU_WEBHOOK_URL=
+FEISHU_WEBHOOK_SECRET=
+FEISHU_BITABLE_APP_TOKEN=
+FEISHU_BITABLE_TABLE_ID=
+QMSG_KEY=
+```
+
+Recommended checks when wiring the contact form:
+
+1. Open the Feishu Open Platform app and enable scopes:
+   - `bitable:app`
+   - `base:record:create`
+2. Publish the updated app permissions.
+3. In the target Bitable document, use `添加文档应用` and add this app with edit access.
+4. Confirm `FEISHU_BITABLE_TABLE_ID` uses the `table=tbl...` value from the URL, not `view=vew...`.
+5. Build the Bitable columns horizontally, not as row content.
+
+Expected Bitable columns for the current contact form:
+
+- `姓名`
+- `邮箱`
+- `主题`
+- `留言内容`
+- `提交时间`
+- `处理状态`
+
+Common failures seen during local setup:
+
+- `99991672`: missing app scopes
+- `91403 Forbidden`: app not added to the document as a document app
+- `TableIdNotFound`: wrong `FEISHU_BITABLE_TABLE_ID`
+- `FieldNameNotFound`: columns were missing, misnamed, or created as rows instead of fields
+
+After changing `.env.local`, restart the dev server before testing again.
