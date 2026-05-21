@@ -51,14 +51,9 @@
             <h2 class="feedback-title">有建议想补充？</h2>
             <p class="feedback-desc">知识库的分类、排版和内容收录会持续优化，欢迎把阅读体验或想补充的话题直接告诉我。</p>
             <div class="feedback-actions">
-              <a
-                href="https://qm.qq.com/cgi-bin/qm/qr?k=zzJ02JO6xDIwtgLFF2ZNmtIIXQKKk81j&jump_from=webapi&authKey=RJGZ5O+qA/qe7pkDbICLL3VOd1dzVmeyDGACjsinraACAO0my9W9qitkjmXpfBxf"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="feedback-primary"
-              >
-                QQ群反馈
-              </a>
+              <RouterLink to="/contact" class="feedback-primary">
+                联系反馈
+              </RouterLink>
               <RouterLink to="/contact" class="feedback-secondary">飞书/留言反馈</RouterLink>
             </div>
             <p class="feedback-note">如果你更习惯一对一沟通，也可以从联系页直接留言。</p>
@@ -1598,7 +1593,6 @@ function openCollabLink() {
 @media (max-width: 768px) {
   .page-hero { padding-top: calc(64px + 3rem); }
   .section { padding: var(--space-12) 0; }
-  .container { padding: 0 var(--space-4); }
   .group-header,
   .doc-card-top,
   .doc-footer,
@@ -1636,6 +1630,32 @@ function openCollabLink() {
   .template-top {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .doc-modal {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .modal-content {
+    max-height: 100dvh;
+    max-height: 100vh;
+    height: 100%;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .modal-header-top {
+    gap: 0.5rem;
+  }
+
+  .modal-nav-btn {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
   }
 }
 </style>

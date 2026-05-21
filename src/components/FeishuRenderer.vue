@@ -306,6 +306,9 @@ function renderTextElement(element) {
   font-size: 0.98rem;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .feishu-content :deep(h1) {
@@ -449,10 +452,14 @@ function renderTextElement(element) {
 }
 
 .feishu-content :deep(table) {
+  display: block;
   width: 100%;
+  max-width: 100%;
   margin: 1rem 0;
   border-collapse: collapse;
   font-size: 0.9rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .feishu-content :deep(th),

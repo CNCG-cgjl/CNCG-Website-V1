@@ -34,7 +34,7 @@
       <div class="flow-section" ref="flowRef" :class="{ visible: flowVisible }">
         <div class="flow-header">
           <h2 class="section-title">咨询联系流程</h2>
-          <a href="#contact" class="btn-primary flow-cta">立即咨询</a>
+          <RouterLink to="/contact" class="btn-primary flow-cta">立即咨询</RouterLink>
         </div>
 
         <div class="flow-steps">
@@ -59,6 +59,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useIntersectionObserver } from '@/composables/useIntersectionObserver.js'
 
 const titleRef = ref(null)
@@ -298,6 +299,23 @@ const steps = [
 .flow-cta {
   font-size: 0.875rem;
   padding: 0.625rem 1.5rem;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .flow-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .flow-cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .flow-section {
+    padding: 1.25rem;
+  }
 }
 
 .flow-steps {

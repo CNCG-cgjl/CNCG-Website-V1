@@ -1,5 +1,8 @@
 import { formatDocumentDate, getWikiMeta, getWikiSpaceNodes } from '@/utils/feishuProxy.js'
 
+/** 飞书 Wiki 根目录名含以下词 → 网站「笔记」区；其余 → 知识库 */
+export const FEISHU_NOTE_ROOT_KEYWORDS = ['碎碎念', '笔记', 'notes', 'note', '博客动态', '动态']
+
 export const KNOWLEDGE_BASE_CATEGORIES = [
   {
     key: 'tools',
@@ -51,7 +54,56 @@ function getCategoryByKey(key) {
   return KNOWLEDGE_BASE_CATEGORIES.find(category => category.key === key) || KNOWLEDGE_BASE_CATEGORIES[KNOWLEDGE_BASE_CATEGORIES.length - 1]
 }
 
+function cleanDisplayTitle(title = '') {
+  return String(title)
+    .replace(/^\[(笔记|知识库|note|kb|NOTE|KB)\]\s*/i, '')
+    .trim() || '未命名文档'
+}
+
+/**
+ * 同一飞书 Wiki 空间内区分网站渲染面：note（时间线笔记）| kb（知识库分类）
+ */
+export function inferContentSurface(parentTitle = '', nodeTitle = '') {
+  const title = String(nodeTitle).trim()
+  if (/^\[(笔记|note)\]/i.test(title)) return 'note'
+  if (/^\[(知识库|kb)\]/i.test(title)) return 'kb'
+
+  const parent = String(parentTitle).toLowerCase()
+  if (FEISHU_NOTE_ROOT_KEYWORDS.some(keyword => parent.includes(keyword.toLowerCase()))) {
+    return 'note'
+  }
+  return 'kb'
+}
+
+export function getCommentPageId(doc) {
+  if (doc?.objToken) return `doc-${doc.objToken}`
+  return 'doc-unknown'
+}
+
+/** 飞书 Wiki 父目录名与站内分类对齐（优先于标题关键词） */
+function inferCategoryFromParentFolder(parentTitle = '') {
+  const parent = String(parentTitle).trim().toLowerCase()
+  const rules = [
+    { fragments: ['自由随笔', '随笔'], key: 'essays' },
+    { fragments: ['建站记录', '建站过程', '建站'], key: 'site' },
+    { fragments: ['工具分享', '工具'], key: 'tools' },
+    { fragments: ['资料整理', '资料'], key: 'resources' },
+    { fragments: ['项目经验', '项目'], key: 'projects' },
+    { fragments: ['副业'], key: 'business' }
+  ]
+
+  for (const rule of rules) {
+    if (rule.fragments.some(fragment => parent.includes(fragment))) {
+      return rule.key
+    }
+  }
+  return null
+}
+
 function inferCategoryKey(...texts) {
+  const parentCategory = texts[0] ? inferCategoryFromParentFolder(texts[0]) : null
+  if (parentCategory) return parentCategory
+
   const normalizedTexts = texts
     .filter(Boolean)
     .map(text => String(text).toLowerCase())
@@ -112,23 +164,28 @@ function isReadableNode(node) {
   return Boolean(node?.node_token && node?.title && (node?.obj_token || node?.obj_type))
 }
 
-function normalizeNode(node, categoryKey, parentTitle = '') {
-  const resolvedCategoryKey = categoryKey || inferCategoryKey(parentTitle, node?.title)
+function normalizeNode(node, categoryKey, parentTitle = '', contentSurface = 'kb') {
+  const parentCategory = inferCategoryFromParentFolder(parentTitle)
+  const resolvedCategoryKey = parentCategory || categoryKey || inferCategoryKey(parentTitle, node?.title)
   const category = getCategoryByKey(resolvedCategoryKey)
   const timestamp = extractTimestamp(node)
+  const displayTitle = cleanDisplayTitle(node.title)
 
   return {
     id: node.node_token || node.obj_token,
     nodeToken: node.node_token,
     objToken: node.obj_token || node.node_token,
-    title: node.title || '未命名文档',
+    slug: node.node_token || node.obj_token,
+    source: 'feishu',
+    contentSurface,
+    title: displayTitle,
     objType: node.obj_type,
     typeName: getNodeTypeName(node.obj_type),
     categoryKey: category.key,
     categoryTitle: category.title,
     categoryLabel: category.shortLabel,
     categoryDescription: category.description,
-    summary: buildSummary(node.title, category.title),
+    summary: buildSummary(displayTitle, category.title),
     updatedAt: formatDocumentDate(timestamp),
     updatedAtRaw: timestamp ? new Date(timestamp).getTime() : 0,
     editUrl: `${FEISHU_BASE_URL}/${node.node_token}`
@@ -156,7 +213,7 @@ export function createKnowledgeGroups(docs = []) {
   return grouped
 }
 
-export async function loadKnowledgeBaseIndex() {
+export async function loadFeishuWikiIndex() {
   const meta = await getWikiMeta()
   const wikiToken = meta.wiki_token || ''
   const spaceId = meta.space_id || ''
@@ -165,8 +222,7 @@ export async function loadKnowledgeBaseIndex() {
     return {
       configured: false,
       meta,
-      docs: [],
-      groups: createKnowledgeGroups([])
+      docs: []
     }
   }
 
@@ -193,31 +249,45 @@ export async function loadKnowledgeBaseIndex() {
   const docs = []
 
   for (const entry of nestedEntries) {
-    const inferredRootCategory = inferCategoryKey(entry.rootNode?.title)
+    const rootTitle = entry.rootNode?.title || ''
+    const surfaceFromRoot = inferContentSurface(rootTitle)
+    const inferredRootCategory = inferCategoryKey(rootTitle)
     const readableChildren = entry.children.filter(isReadableNode)
 
     if (readableChildren.length) {
       for (const child of readableChildren) {
-        docs.push(normalizeNode(child, inferredRootCategory, entry.rootNode.title))
+        const surface = inferContentSurface(rootTitle, child.title) || surfaceFromRoot
+        docs.push(normalizeNode(child, inferredRootCategory, rootTitle, surface))
       }
       continue
     }
 
     if (isReadableNode(entry.rootNode)) {
-      docs.push(normalizeNode(entry.rootNode, inferredRootCategory))
+      docs.push(normalizeNode(entry.rootNode, inferredRootCategory, '', surfaceFromRoot))
     }
   }
 
   const uniqueDocs = Array.from(new Map(docs.map(doc => [doc.id, doc])).values())
-  const groups = createKnowledgeGroups(uniqueDocs)
+  const sortedDocs = uniqueDocs.sort((left, right) => {
+    if (right.updatedAtRaw !== left.updatedAtRaw) return right.updatedAtRaw - left.updatedAtRaw
+    return left.title.localeCompare(right.title, 'zh-CN')
+  })
 
   return {
     configured: true,
     meta,
-    docs: uniqueDocs.sort((left, right) => {
-      if (right.updatedAtRaw !== left.updatedAtRaw) return right.updatedAtRaw - left.updatedAtRaw
-      return left.title.localeCompare(right.title, 'zh-CN')
-    }),
+    docs: sortedDocs
+  }
+}
+
+export async function loadKnowledgeBaseIndex() {
+  const result = await loadFeishuWikiIndex()
+  const groups = createKnowledgeGroups(result.docs)
+
+  return {
+    configured: result.configured,
+    meta: result.meta,
+    docs: result.docs,
     groups
   }
 }

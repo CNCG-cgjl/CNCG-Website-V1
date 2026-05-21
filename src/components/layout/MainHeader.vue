@@ -50,6 +50,16 @@
       </div>
     </div>
 
+    <transition name="menu-fade">
+      <button
+        v-if="menuOpen"
+        type="button"
+        class="nav-mobile-backdrop"
+        aria-label="关闭菜单"
+        @click="menuOpen = false"
+      ></button>
+    </transition>
+
     <transition name="menu-slide">
       <div v-if="menuOpen" class="nav-mobile">
         <RouterLink
@@ -69,7 +79,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTheme } from '@/composables/useTheme.js'
 
@@ -80,7 +90,6 @@ const menuOpen = ref(false)
 
 const navItems = [
   { cn: '首页', path: '/', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>' },
-  { cn: '笔记', path: '/note', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>' },
   { cn: '知识库', path: '/doc', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>' },
   { cn: '商店', path: '/shop', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>' },
   { cn: '关于', path: '/about', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>' }
@@ -95,8 +104,38 @@ function handleScroll() {
   isScrolled.value = window.scrollY > 30
 }
 
+let menuScrollY = 0
+
+function lockBodyScroll(lock) {
+  if (typeof document === 'undefined') return
+  if (lock) {
+    menuScrollY = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${menuScrollY}px`
+    document.body.style.left = '0'
+    document.body.style.right = '0'
+    document.body.style.width = '100%'
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.left = ''
+    document.body.style.right = ''
+    document.body.style.width = ''
+    document.body.style.overflow = ''
+    window.scrollTo(0, menuScrollY)
+  }
+}
+
+watch(menuOpen, value => {
+  lockBodyScroll(value)
+})
+
 onMounted(() => window.addEventListener('scroll', handleScroll, { passive: true }))
-onUnmounted(() => window.removeEventListener('scroll', handleScroll))
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+  lockBodyScroll(false)
+})
 </script>
 
 <style scoped>
@@ -129,11 +168,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   transition: opacity var(--duration-normal) var(--ease-out);
 }
 .header-glow-line.visible { opacity: 1; }
-
-.container {
-  width: min(1200px, calc(100% - 2rem));
-  margin: 0 auto;
-}
 
 .header-inner {
   display: flex;
@@ -248,11 +282,50 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   transition: transform var(--duration-fast) ease, opacity var(--duration-fast) ease;
 }
 
+.nav-mobile-backdrop {
+  position: fixed;
+  inset: 64px 0 0 0;
+  z-index: 98;
+  border: 0;
+  padding: 0;
+  background: rgba(10, 10, 15, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+}
+
+[data-theme="dark"] .nav-mobile-backdrop {
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.menu-fade-enter-active,
+.menu-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.menu-fade-enter-from,
+.menu-fade-leave-to {
+  opacity: 0;
+}
+
 .nav-mobile {
   display: none;
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  z-index: 99;
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
   padding: 0.5rem 1rem 1rem;
-  background: var(--header-bg-scrolled);
+  background: var(--bg-primary);
   border-bottom: 1px solid var(--header-border);
+  box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .nav-mobile {
+  background: #111118;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
 .menu-slide-enter-active,

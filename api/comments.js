@@ -3,7 +3,9 @@ import { createRateLimiter, getClientIp, isAllowedBrowserRequest, setCorsHeaders
 import { getServiceSupabase } from './lib/supabase.js'
 
 const checkRateLimit = createRateLimiter()
-const PAGE_ID_RE = /^(note|blog)-[a-z0-9][a-z0-9.-]*$/i
+// slug 仅 ASCII；P1.5 飞书笔记使用 doc-{obj_token}
+const PAGE_ID_RE = /^(note|blog|doc)-[a-z0-9][a-z0-9.-]*$/i
+const PAGE_ID_MAX_LEN = 128
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 function normalizeComment(row) {
@@ -18,9 +20,13 @@ function normalizeComment(row) {
 }
 
 function getCommentPath(pageId) {
-  if (pageId.startsWith('note-')) return `/note/${pageId.slice(5)}`
+  if (pageId.startsWith('note-') || pageId.startsWith('doc-')) return '/doc'
   if (pageId.startsWith('blog-')) return `/blog/${pageId.slice(5)}`
   return '/'
+}
+
+function isValidPageId(pageId) {
+  return pageId.length <= PAGE_ID_MAX_LEN && PAGE_ID_RE.test(pageId)
 }
 
 function validatePayload(body = {}) {
@@ -34,7 +40,7 @@ function validatePayload(body = {}) {
   if (website) {
     throw new Error('Invalid submission')
   }
-  if (!PAGE_ID_RE.test(pageId)) {
+  if (!isValidPageId(pageId)) {
     throw new Error('无效的页面标识')
   }
   if (!authorName || authorName.length > 30) {
@@ -68,7 +74,7 @@ export default async function handler(req, res) {
     const pageId = String(req.query.page_id || '').trim()
     const status = String(req.query.status || 'approved').toLowerCase()
 
-    if (!PAGE_ID_RE.test(pageId)) {
+    if (!isValidPageId(pageId)) {
       return res.status(400).json({ error: 'Invalid page_id parameter' })
     }
 

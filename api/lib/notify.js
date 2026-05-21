@@ -157,7 +157,7 @@ export function formatUpdateMessage(type, data) {
       return `📝 CNCG 网站更新\n\n📰 新文章发布：${sanitize(data.title)}\n${data.summary ? '📋 ' + sanitize(data.summary) + '\n' : ''}🔗 https://cncg.me/blog/${sanitize(data.slug)}\n\n⏰ ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`
     },
     new_note: () => {
-      return `📌 CNCG 网站更新\n\n📖 新笔记发布：${sanitize(data.title)}\n${data.summary ? '📋 ' + sanitize(data.summary) + '\n' : ''}🔗 https://cncg.me/note/${sanitize(data.slug)}\n\n⏰ ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`
+      return `📌 CNCG 网站更新\n\n📖 知识库更新：${sanitize(data.title)}\n${data.summary ? '📋 ' + sanitize(data.summary) + '\n' : ''}🔗 https://cncg.me/doc\n\n⏰ ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`
     },
     new_comment: () => {
       return `💬 CNCG 新评论\n\n👤 ${sanitize(data.author)} 在「${sanitize(data.page)}」评论：\n"${sanitize(data.content)}"\n\n🔗 https://cncg.me${sanitize(data.url)}\n⏰ ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`

@@ -17,6 +17,9 @@ dist-ssr
 .env.local
 .env.*.local
 
+# Build artifacts (release zips stay local)
+build/
+
 # Backup archives
 *.zip
 *.tar.gz

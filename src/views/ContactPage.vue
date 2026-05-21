@@ -22,8 +22,23 @@
             class="channel-shell"
             :class="{ 'channel-shell-wechat': channel.action === 'wechat-hover' }"
           >
+            <button
+              v-if="channel.action === 'copy-qq'"
+              type="button"
+              class="channel-card"
+              @click="copyQQ"
+            >
+              <div class="channel-icon" :style="{ background: channel.bg }">
+                <span class="channel-icon-svg" v-html="channel.icon"></span>
+              </div>
+              <h3 class="channel-name">{{ channel.name }}</h3>
+              <p class="channel-label">{{ channel.label }}</p>
+              <p class="channel-desc">{{ channel.desc }}</p>
+              <span class="channel-link">{{ qqCopied ? '已复制 ✓' : channel.linkText }}</span>
+            </button>
+
             <a
-              v-if="!channel.action"
+              v-else-if="!channel.action"
               :href="channel.url"
               :target="channel.target"
               rel="noopener noreferrer"
@@ -191,16 +206,33 @@ const githubIcon = '<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/s
 const mailIcon = '<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M838.954667 234.666667H170.666667c-3.626667 0-7.168 0.448-10.56 1.322666l323.690666 323.669334a21.333333 21.333333 0 0 0 30.165334 0L838.954667 234.666667z m46.144 14.186666l-260.693334 260.693334 262.933334 262.912c5.44-7.168 8.661333-16.106667 8.661333-25.792V277.333333c0-10.944-4.117333-20.906667-10.88-28.48zM843.861333 789.333333l-249.6-249.621333-50.133333 50.133333a64 64 0 0 1-90.517333 0l-50.112-50.133333L156.373333 786.88c4.48 1.578667 9.28 2.453333 14.314667 2.453333h673.194667zM128.661333 754.218667L373.333333 509.525333 129.578667 265.813333A42.709333 42.709333 0 0 0 128 277.333333v469.333334c0 2.56 0.213333 5.098667 0.661333 7.552zM170.666667 192h682.666666a85.333333 85.333333 0 0 1 85.333334 85.333333v469.333334a85.333333 85.333333 0 0 1-85.333334 85.333333H170.666667a85.333333 85.333333 0 0 1-85.333334-85.333333V277.333333a85.333333 85.333333 0 0 1 85.333334-85.333333z" fill="currentColor"></path></svg>'
 const idleFishIcon = '<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M81 48m139 0l650 0q139 0 139 139l0 650q0 139-139 139l-650 0q-139 0-139-139l0-650q0-139 139-139Z" fill="#FFDA44"></path><path d="M869 469h-94v33h94v-33z m47.995-23.5c0.003 0.166 0.005 0.333 0.005 0.5v161c0 13.255-10.745 24-24 24-2.39 0-4.699-0.35-6.878-1H607c-13.255 0-24-10.745-24-24V445c0-13.255 10.745-24 24-24h130.729c3.801-2.527 8.364-4 13.271-4s9.47 1.473 13.271 4H893c13.255 0 24 10.745 24 24 0 0.167-0.002 0.334-0.005 0.5zM869 582v-32h-94v32h94zM727 469h-96v33h96v-33z m0 113v-32h-96v32h96z m141-205H630v3c0 13.255-10.745 24-24 24s-24-10.745-24-24v-27c0-13.255 10.745-24 24-24h286c13.255 0 24 10.745 24 24v27c0 13.255-10.745 24-24 24s-24-10.745-24-24v-3z m-384-30c13.255 0 24 10.745 24 24v300c0 13.255-10.745 24-24 24s-24-10.745-24-24V508h-95v163c0 13.255-10.745 24-24 24s-24-10.745-24-24V508h-96v163c0 13.255-10.745 24-24 24s-24-10.745-24-24V371c0-13.255 10.745-24 24-24s24 10.745 24 24v89h96v-8c0-13.255 10.745-24 24-24s24 10.745 24 24v8h95v-65H333c-13.255 0-24-10.745-24-24s10.745-24 24-24h151zM269 565c13.255 0 24 10.745 24 24v82c0 13.255-10.745 24-24 24s-24-10.745-24-24v-82c0-13.255 10.745-24 24-24z m-4-236c13.255 0 24 10.745 24 24v27c0 13.255-10.745 24-24 24s-24-10.745-24-24v-27c0-13.255 10.745-24 24-24z m341 318c13.255 0 24 10.745 24 24s-10.745 24-24 24-24-10.745-24-24 10.745-24 24-24z m97 0c13.255 0 24 10.745 24 24s-10.745 24-24 24-24-10.745-24-24 10.745-24 24-24z m95 0c13.255 0 24 10.745 24 24s-10.745 24-24 24-24-10.745-24-24 10.745-24 24-24z m95 0c13.255 0 24 10.745 24 24s-10.745 24-24 24-24-10.745-24-24 10.745-24 24-24z m-481-82c13.255 0 24 10.745 24 24v82c0 13.255-10.745 24-24 24s-24-10.745-24-24v-82c0-13.255 10.745-24 24-24z" fill="#000000"></path></svg>'
 
+const qqCopied = ref(false)
+
+const copyQQ = async () => {
+  try {
+    await navigator.clipboard.writeText('3230801354')
+  } catch {
+    const t = document.createElement('textarea')
+    t.value = '3230801354'
+    t.style.cssText = 'position:fixed;opacity:0'
+    document.body.appendChild(t)
+    t.select()
+    document.execCommand('copy')
+    document.body.removeChild(t)
+  }
+  qqCopied.value = true
+  setTimeout(() => { qqCopied.value = false }, 2000)
+}
+
 const channels = [
   {
     name: 'QQ',
     label: '3230801354',
-    desc: '适合快速沟通需求与问题',
-    url: 'https://wpa.qq.com/msgrd?v=3&uin=3230801354&site=qq&menu=yes',
-    target: '_blank',
+    desc: '点击复制号码添加好友（临时会话易被腾讯拦截）',
+    action: 'copy-qq',
     bg: 'linear-gradient(135deg, rgba(18,183,245,0.16), rgba(6,182,212,0.2))',
     icon: qqIcon,
-    linkText: '前往联系 ->'
+    linkText: '点击复制 ->'
   },
   {
     name: '微信',
@@ -454,6 +486,10 @@ function resetForm() {
   height: 100%;
   padding: 1.5rem;
   border: 1px solid var(--border);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: var(--bg-card);
   border-radius: 18px;
   background: color-mix(in srgb, var(--bg-card) 94%, transparent);
   text-decoration: none;

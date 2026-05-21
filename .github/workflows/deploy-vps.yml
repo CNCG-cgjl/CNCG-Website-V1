@@ -1,0 +1,60 @@
+# VPS 静态站部署：releases/dist-{sha} + symlink 回滚
+# 触发：推送 v1.* 标签，或手动 workflow_dispatch
+name: Deploy VPS (cncg.me)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v1.*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Verify dist
+        run: |
+          test -f dist/index.html
+          JS_BYTES=$(find dist/assets -name '*.js' -type f -print0 | xargs -0 cat | wc -c)
+          test "$JS_BYTES" -gt 100000
+
+      - name: Prepare release directory name
+        id: meta
+        run: echo "release=dist-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Rsync to server releases
+        uses: burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete
+          path: dist/
+          remote_path: ${{ secrets.DEPLOY_PATH }}/releases/${{ steps.meta.outputs.release }}/
+          remote_host: ${{ secrets.SERVER_HOST }}
+          remote_user: ${{ secrets.SERVER_USER }}
+          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Switch symlink and reload nginx
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            DEPLOY="${{ secrets.DEPLOY_PATH }}"
+            REL="${{ steps.meta.outputs.release }}"
+            mkdir -p "$DEPLOY/releases"
+            ln -sfn "$DEPLOY/releases/$REL" "$DEPLOY/dist"
+            nginx -t
+            systemctl reload nginx
+            echo "Deployed $REL -> $DEPLOY/dist"

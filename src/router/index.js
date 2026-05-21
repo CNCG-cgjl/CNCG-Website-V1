@@ -47,24 +47,6 @@ const routes = [
     }
   },
   {
-    path: '/note',
-    name: 'Note',
-    component: () => import('../views/NotePage.vue'),
-    meta: {
-      title: '笔记 | CNCG',
-      description: '以 Markdown 为基础的轻量笔记区，沉淀开发过程中的片段、结论与方法。'
-    }
-  },
-  {
-    path: '/note/:slug',
-    name: 'NoteDetail',
-    component: () => import('../views/NoteDetailPage.vue'),
-    meta: {
-      title: '笔记详情 | CNCG',
-      description: '查看 CNCG 的 Markdown 笔记内容。'
-    }
-  },
-  {
     path: '/doc',
     name: 'Doc',
     component: () => import('../views/DocPage.vue'),
@@ -125,6 +107,13 @@ export const router = createRouter({
     if (to.hash) return { el: to.hash, behavior: 'smooth' }
     return { top: 0, behavior: 'smooth' }
   }
+})
+
+router.beforeEach((to) => {
+  if (to.path === '/note' || to.path.startsWith('/note/')) {
+    return { path: '/doc', query: to.query, hash: to.hash, replace: true }
+  }
+  return true
 })
 
 const DEFAULT_TITLE = 'CNCG | 网站开发、内容创作与数字化解决方案'

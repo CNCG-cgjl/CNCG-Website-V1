@@ -110,15 +110,15 @@
 
       <!-- CTA按钮组 -->
       <div class="cta-group fade-in-up" style="animation-delay: 0.48s">
-        <RouterLink to="/note" class="cta-primary">
-          探索笔记
+        <RouterLink to="/doc" class="cta-primary">
+          浏览知识库
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
           </svg>
         </RouterLink>
-        <RouterLink to="/doc" class="cta-secondary">
-          浏览知识库
+        <RouterLink to="/about" class="cta-secondary">
+          关于 CNCG
         </RouterLink>
       </div>
 
@@ -175,7 +175,7 @@ const audioSource = ref(null)
 
 function handleSearch() {
   if (!query.value.trim()) return
-  router.push({ path: '/note', query: { q: query.value.trim() } })
+  router.push({ path: '/doc', query: { q: query.value.trim() } })
 }
 
 // 初始化音频上下文
@@ -950,7 +950,19 @@ onUnmounted(() => {
   .brand-bar { margin-bottom: 1.5rem; }
   .hero-title { margin-bottom: 1rem; }
   .hero-subtitle { margin-bottom: 2rem; }
-  .tags-wrap { margin-bottom: 2rem; }
+  .tags-wrap {
+    margin-bottom: 2rem;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0 0.25rem 0.35rem;
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .tags-wrap::-webkit-scrollbar { display: none; }
+  .tags-label { flex-shrink: 0; }
+  .tag-pill { flex-shrink: 0; }
   .cta-group { margin-bottom: 2.5rem; }
   .scroll-hint { display: none; }
   .sparkle { display: none; }

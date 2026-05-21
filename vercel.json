@@ -14,7 +14,7 @@
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "https://cncg.me" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, x-notify-token" }
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, x-notify-token, x-cron-token" }
       ]
     },
     {
@@ -37,12 +37,6 @@
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=604800" }
       ]
-    }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/check-updates",
-      "schedule": "0 0 * * *"
     }
   ]
 }

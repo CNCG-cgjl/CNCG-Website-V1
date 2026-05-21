@@ -1,12 +1,14 @@
 {
   "name": "cnng-website-production",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release:pack": "powershell -ExecutionPolicy Bypass -File ./scripts/package-server-release.ps1",
+    "release:upload": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-upload.ps1"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",
