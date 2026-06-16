@@ -16,7 +16,7 @@
           :key="item.path"
           :to="item.path"
           class="nav-item"
-          :class="{ active: isActive(item.path) }"
+          :class="{ active: isActive(item.path), 'nav-item-cta': item.highlight }"
         >
           <span class="nav-icon-box" v-html="item.svg"></span>
           <span class="nav-label">{{ item.cn }}</span>
@@ -67,7 +67,7 @@
           :key="item.path"
           :to="item.path"
           class="nav-mobile-item"
-          :class="{ active: isActive(item.path) }"
+          :class="{ active: isActive(item.path), 'nav-mobile-cta': item.highlight }"
           @click="menuOpen = false"
         >
           <span class="nav-mobile-icon" v-html="item.svg"></span>
@@ -90,9 +90,11 @@ const menuOpen = ref(false)
 
 const navItems = [
   { cn: '首页', path: '/', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>' },
-  { cn: '知识库', path: '/doc', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>' },
+  { cn: '服务', path: '/services', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>' },
   { cn: '商店', path: '/shop', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>' },
-  { cn: '关于', path: '/about', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>' }
+  { cn: '工具', path: '/tools', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>' },
+  { cn: '知识库', path: '/doc', svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>' },
+  { cn: '联系', path: '/contact', highlight: true, svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>' }
 ]
 
 function isActive(path) {
@@ -213,7 +215,25 @@ onUnmounted(() => {
 .nav-desktop {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.nav-item-cta,
+.nav-mobile-cta {
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.28);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.nav-item-cta:hover,
+.nav-item-cta.active,
+.nav-mobile-cta:hover,
+.nav-mobile-cta.active {
+  background: rgba(6, 182, 212, 0.18);
+  border-color: rgba(6, 182, 212, 0.45);
 }
 
 .nav-item,
@@ -245,7 +265,12 @@ onUnmounted(() => {
 
 .nav-label,
 .nav-mobile-text {
-  font-size: 0.92rem;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 861px) and (max-width: 1080px) {
+  .nav-item { padding: 0.55rem 0.6rem; }
+  .nav-label { font-size: 0.8125rem; }
 }
 
 .header-actions {

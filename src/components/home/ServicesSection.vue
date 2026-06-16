@@ -3,8 +3,14 @@
     <div class="container">
       <!-- 区块标题 -->
       <div class="section-header">
-        <h2 class="section-title" ref="titleRef" :class="{ visible: titleVisible }">服务内容</h2>
-        <p class="section-desc">专业的技术支持与创意解决方案，助力您的数字化目标</p>
+        <h2 class="section-title" ref="titleRef" :class="{ visible: titleVisible }">AI 可见性服务</h2>
+        <p class="section-desc">从诊断到改造，让你的网站被 AI 准确理解</p>
+        <div class="section-quick-links fade-in-up" :class="{ visible: titleVisible }">
+          <RouterLink to="/services" class="quick-link">定制报价 →</RouterLink>
+          <RouterLink to="/shop" class="quick-link quick-link-accent">闲鱼商店 →</RouterLink>
+          <RouterLink to="/tools" class="quick-link">免费工具 →</RouterLink>
+          <RouterLink to="/contact" class="quick-link">联系咨询 →</RouterLink>
+        </div>
       </div>
 
       <!-- 4 张服务卡片（升级版） -->
@@ -30,27 +36,11 @@
         </div>
       </div>
 
-      <!-- 咨询联系流程（升级版） -->
-      <div class="flow-section" ref="flowRef" :class="{ visible: flowVisible }">
-        <div class="flow-header">
-          <h2 class="section-title">咨询联系流程</h2>
-          <RouterLink to="/contact" class="btn-primary flow-cta">立即咨询</RouterLink>
-        </div>
-
-        <div class="flow-steps">
-          <template v-for="(step, i) in steps" :key="step.id">
-            <div class="flow-step">
-              <div class="step-circle">
-                <span class="step-num">{{ step.id }}</span>
-              </div>
-              <div class="step-body">
-                <p class="step-title">{{ step.title }}</p>
-                <p class="step-desc">{{ step.desc }}</p>
-              </div>
-              <!-- 连接线 -->
-              <div v-if="i < steps.length - 1" class="step-connector" aria-hidden="true"></div>
-            </div>
-          </template>
+      <div class="flow-cta-bar" ref="flowRef" :class="{ visible: flowVisible }">
+        <p class="flow-cta-text">有项目需求？查看完整服务说明与交付流程</p>
+        <div class="flow-cta-actions">
+          <RouterLink to="/services" class="btn-primary flow-cta">查看服务详情</RouterLink>
+          <RouterLink to="/contact" class="btn-secondary flow-cta-secondary">联系咨询</RouterLink>
         </div>
       </div>
     </div>
@@ -71,40 +61,34 @@ const { isVisible: flowVisible  } = useIntersectionObserver(flowRef,  { threshol
 const services = [
   {
     id: 1,
-    title: '网站开发',
+    title: 'AI 可见性体检',
     desc: '从概念到部署，提供完整的前端与全栈开发服务，构建高性能、现代化的 Web 应用。',
     tags: ['Vue 3', 'React', 'Node.js', 'Vercel'],
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
   },
   {
     id: 2,
-    title: '内容创作',
+    title: 'AI-ready 网站改造',
     desc: '专业的文案撰写、排版设计与内容策划，帮助您的品牌发声，触达目标用户。',
     tags: ['博客文章', '飞书文档', '产品文案', '落地页'],
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
   },
   {
     id: 3,
-    title: '技术咨询',
+    title: '结构化内容重构',
     desc: '提供技术选型建议、架构方案评审与问题排查，降低您的技术决策风险。',
     tags: ['技术选型', '架构设计', '性能优化', '问题诊断'],
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
   },
   {
     id: 4,
-    title: '店铺服务',
+    title: 'JSON-LD / Schema',
     desc: '精选模板、工具与定制服务，通过闲鱼店铺便捷购买，快速解决您的实际需求。',
     tags: ['网站模板', '实用工具', '定制开发', '闲鱼店铺'],
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>`,
   },
 ]
 
-const steps = [
-  { id: '1', title: '提交需求', desc: '通过表单、QQ 或微信详细描述您的需求与预算' },
-  { id: '2', title: '方案报价', desc: '评估需求后给出详细方案与价格估算，1-2 个工作日内反馈' },
-  { id: '3', title: '确认合作', desc: '双方确认方案细节，签订合作协议，支付定金' },
-  { id: '4', title: '交付验收', desc: '按时完成开发并交付，提供说明文档与售后支持' },
-]
 </script>
 
 <style scoped>
@@ -131,7 +115,40 @@ const steps = [
   font-size: 1rem;
   color: var(--text-secondary);
   max-width: 480px;
-  margin: 0 auto;
+  margin: 0 auto 1.25rem;
+}
+
+.section-quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.5s var(--ease-out);
+}
+.section-quick-links.visible {
+  opacity: 1;
+  transform: none;
+}
+.quick-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  transition: color var(--duration-fast) ease, border-color var(--duration-fast) ease, background var(--duration-fast) ease;
+}
+.quick-link:hover {
+  color: var(--accent);
+  border-color: rgba(6, 182, 212, 0.35);
+  background: rgba(6, 182, 212, 0.06);
+}
+.quick-link-accent {
+  border-color: rgba(6, 182, 212, 0.35);
+  color: var(--accent);
 }
 
 /* =============================================
@@ -262,8 +279,67 @@ const steps = [
   color: var(--text-muted);
 }
 
+.flow-cta-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  padding: 1.75rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: all 0.5s var(--ease-out) 0.15s;
+}
+.flow-cta-bar.visible {
+  opacity: 1;
+  transform: none;
+}
+.flow-cta-text {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  max-width: 28rem;
+}
+.flow-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.5rem;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color var(--duration-fast) ease, color var(--duration-fast) ease;
+}
+.btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.flow-cta-secondary { text-align: center; }
+
+@media (max-width: 640px) {
+  .flow-cta-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1.25rem;
+  }
+  .flow-cta-actions { flex-direction: column; }
+  .flow-cta,
+  .flow-cta-secondary { width: 100%; }
+}
+
 /* =============================================
-   流程步骤 — 升级版：加大圆形+编号渐变色+流光连接线
+   流程步骤 — 旧版样式保留（其他页可能引用）
    ============================================= */
 .flow-section {
   background: var(--bg-card);

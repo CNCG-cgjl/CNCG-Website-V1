@@ -3,11 +3,11 @@
     <div class="container">
       <div class="content-single" ref="docRef" :class="{ visible: docVisible }">
         <div class="col-header">
-          <h2 class="col-title">知识库精选</h2>
-          <span class="col-badge col-badge-purple">DOC</span>
+          <h2 class="col-title">教程与搭建记录</h2>
+          <span class="col-badge col-badge-purple">知识库</span>
         </div>
         <p class="col-desc">
-          建站过程、工具与项目经验等内容均在飞书 Wiki 维护，更新后刷新本站即可阅读。
+          免费阅读建站过程与工具笔记；需要定制开发或购买标品服务，请使用页面上方的服务与商店入口。
         </p>
 
         <div v-if="docsLoading" class="empty-state">

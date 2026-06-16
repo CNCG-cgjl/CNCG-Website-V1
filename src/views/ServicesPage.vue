@@ -24,6 +24,18 @@
       </div>
     </section>
 
+    <section class="shop-banner-section">
+      <div class="container">
+        <div class="shop-banner fade-in-up">
+          <div class="shop-banner-body">
+            <h2 class="shop-banner-title">标品服务走商店，更快下单</h2>
+            <p class="shop-banner-desc">电脑清理、环境配置等低价服务支持闲鱼担保交易；定制开发留在本页询价。</p>
+          </div>
+          <RouterLink to="/shop" class="shop-banner-btn">前往商店 →</RouterLink>
+        </div>
+      </div>
+    </section>
+
     <!-- 核心服务卡片 -->
     <section class="section core-services">
       <div class="container">
@@ -218,6 +230,48 @@ const techStack = [
 .section-subtitle { font-size: 0.95rem; color: var(--text-secondary); text-align: center; max-width: 520px; margin: 0 auto 2.5rem; }
 .fade-in-up { animation: fadeInUp 0.5s var(--ease-out) both; }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+.shop-banner-section { padding: 0 0 var(--space-8); }
+.shop-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding: 1.25rem 1.5rem;
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  border-radius: var(--radius-xl);
+}
+.shop-banner-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.shop-banner-desc {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.shop-banner-btn {
+  flex-shrink: 0;
+  padding: 0.6rem 1.25rem;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.shop-banner-btn:hover { background: var(--accent-hover); }
+
+@media (max-width: 640px) {
+  .shop-banner { flex-direction: column; align-items: stretch; text-align: center; }
+  .shop-banner-btn { width: 100%; text-align: center; }
+}
 
 /* ── Hero ── */
 .services-hero { position: relative; overflow: hidden; padding-top: calc(64px + 3rem); padding-bottom: 3rem; text-align: center; }

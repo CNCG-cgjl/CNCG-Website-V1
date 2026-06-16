@@ -10,7 +10,15 @@
           </span>
         </RouterLink>
 
-        <p class="footer-desc">专注网站开发、内容创作与数字化解决方案。</p>
+        <p class="footer-desc">AI 可见性优化 · AI-ready 网站改造 · 结构化内容</p>
+        <nav class="footer-site-nav" aria-label="站点导航">
+          <RouterLink to="/services" class="footer-nav-link">服务报价</RouterLink>
+          <RouterLink to="/shop" class="footer-nav-link">商店</RouterLink>
+          <RouterLink to="/tools" class="footer-nav-link">工具</RouterLink>
+          <RouterLink to="/doc" class="footer-nav-link">知识库</RouterLink>
+          <RouterLink to="/about" class="footer-nav-link">关于</RouterLink>
+          <RouterLink to="/contact" class="footer-nav-link">联系</RouterLink>
+        </nav>
         <p class="footer-copy">&copy; 2026 CNCG. All rights reserved.</p>
 
         <div v-if="friendLinks.length" class="footer-links">
@@ -254,6 +262,24 @@ const friendLinks = []
   height: 36px;
   border-radius: 999px;
   object-fit: cover;
+}
+
+.footer-site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.footer-nav-link {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--duration-fast) ease;
+}
+
+.footer-nav-link:hover {
+  color: var(--accent);
 }
 
 .footer-desc {

@@ -1,10 +1,17 @@
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
 User-agent: *
 Allow: /
 
 # Sitemap
 Sitemap: https://cncg.me/sitemap.xml
 
-# 禁止爬取私有或冗余路径
+# Disallow private paths
 Disallow: /api/
 Disallow: /.vercel/
 Disallow: /admin/
+Disallow: /feishu-test/

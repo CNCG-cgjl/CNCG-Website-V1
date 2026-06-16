@@ -6,8 +6,17 @@ const routes = [
     name: 'Home',
     component: () => import('../views/HomePage.vue'),
     meta: {
-      title: 'CNCG | 网站开发、内容创作与数字化解决方案',
-      description: 'CNCG 专注网站开发、内容创作与数字化解决方案，提供 Vue3 开发、技术咨询、博客文章、知识库与服务产品。'
+      title: 'CNCG | 让你的网站被 AI 看懂',
+      description: 'CNCG 提供 AI 可见性体检、AI-ready 网站改造和结构化内容优化服务。'
+    }
+  },
+  {
+    path: '/radar',
+    name: 'Radar',
+    component: () => import('../views/RadarPage.vue'),
+    meta: {
+      title: '信息雷达 | CNCG',
+      description: 'AI 驱动的每日情报系统，187 信息源，10 章简报，飞书/QQ 推送。'
     }
   },
   {
@@ -15,91 +24,79 @@ const routes = [
     name: 'About',
     component: () => import('../views/AboutPage.vue'),
     meta: {
-      title: '关于 CNCG',
-      description: '了解 CNCG 的定位、工作方式与服务方向，围绕个人品牌、工具、知识与服务持续建设。'
+      title: '关于 CNCG | AI 可见性优化服务商',
+      description: 'CNCG 是独立数字工作室，专注 AI-ready 网站、AI 可见性体检与结构化内容系统。'
     }
   },
   {
     path: '/services',
     name: 'Services',
     component: () => import('../views/ServicesPage.vue'),
-    meta: {
-      title: '服务项目 | CNCG',
-      description: '查看 CNCG 提供的网站开发、技术咨询、远程协助与数字化建设服务。'
-    }
+    meta: { title: '服务项目 | CNCG', description: 'CNCG 提供 AI 可见性体检、AI-ready 网站改造等服务。' }
   },
   {
     path: '/blog',
     name: 'Blog',
     component: () => import('../views/BlogPage.vue'),
-    meta: {
-      title: '博客 | CNCG',
-      description: '记录技术实践、开发经验与持续输出中的思考。'
-    }
+    meta: { title: '博客 | CNCG', description: '记录技术实践与开发经验。' }
   },
   {
     path: '/blog/:slug',
     name: 'BlogDetail',
     component: () => import('../views/BlogDetailPage.vue'),
-    meta: {
-      title: '博客文章 | CNCG',
-      description: '查看 CNCG 的博客文章详情。'
-    }
+    meta: { title: '博客文章 | CNCG', description: '查看 CNCG 的博客文章详情。' }
   },
   {
     path: '/doc',
     name: 'Doc',
     component: () => import('../views/DocPage.vue'),
-    meta: {
-      title: '知识库 | CNCG',
-      description: 'CNCG 的体系化知识库，适合沉淀文档、说明与长期维护内容。'
-    }
+    meta: { title: '知识库 | CNCG', description: 'CNCG 的体系化知识库。' }
   },
   {
-    path: '/feishu-test',
-    name: 'FeishuTest',
-    component: () => import('../views/FeishuTestPage.vue'),
-    meta: { robots: 'noindex, nofollow' }
+    path: '/tools',
+    name: 'Tools',
+    component: () => import('../views/ToolsPage.vue'),
+    meta: { title: '免费工具 | CNCG', description: 'CNCG 提供的免费在线小工具。' }
+  },
+  {
+    path: '/tools/site-checklist',
+    name: 'ToolSiteChecklist',
+    component: () => import('../views/tools/SiteChecklistPage.vue'),
+    meta: { title: '网站上线检查清单 | CNCG 工具', description: '发布前逐项检查。' }
+  },
+  {
+    path: '/faq',
+    name: 'FAQ',
+    component: () => import('../views/FAQPage.vue'),
+    meta: { title: '常见问题 | CNCG', description: '常见问题解答。' }
   },
   {
     path: '/shop',
     name: 'Shop',
     component: () => import('../views/ShopPage.vue'),
-    meta: {
-      title: '服务商店 | CNCG',
-      description: '浏览 CNCG 提供的网站建设、技术支持、咨询与远程协助服务。'
-    }
-  },
-  {
-    path: '/shop/:service',
-    name: 'ServiceDetail',
-    component: () => import('../views/ServiceDetailPage.vue'),
-    meta: {
-      title: '服务详情 | CNCG',
-      description: '查看服务内容、交付方式、价格区间与合作说明。'
-    }
+    meta: { title: '店铺 | CNCG', description: 'CNCG 的产品与服务。' }
   },
   {
     path: '/contact',
     name: 'Contact',
     component: () => import('../views/ContactPage.vue'),
-    meta: {
-      title: '联系 CNCG',
-      description: '通过留言、评论、社交方式或服务咨询入口联系 CNCG。'
-    }
+    meta: { title: '联系咨询 | CNCG', description: '联系 CNCG 获取技术支持。' }
+  },
+  {
+    path: '/services/:slug',
+    name: 'ServiceDetail',
+    component: () => import('../views/ServiceDetailPage.vue'),
+    meta: { title: '服务详情 | CNCG', description: '查看 CNCG 的服务详情。' }
   },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('../views/NotFoundPage.vue'),
-    meta: {
-      title: '页面未找到 | CNCG',
-      robots: 'noindex, nofollow'
-    }
+    meta: { title: '404 | CNCG', description: '页面未找到' }
   }
 ]
 
-export const router = createRouter({
+const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
@@ -109,63 +106,13 @@ export const router = createRouter({
   }
 })
 
-router.beforeEach((to) => {
-  if (to.path === '/note' || to.path.startsWith('/note/')) {
-    return { path: '/doc', query: to.query, hash: to.hash, replace: true }
-  }
-  return true
-})
-
-const DEFAULT_TITLE = 'CNCG | 网站开发、内容创作与数字化解决方案'
-const DEFAULT_DESCRIPTION = 'CNCG 专注网站开发、内容创作与数字化解决方案，提供 Vue3 开发、技术咨询、博客文章、知识库与服务产品。'
-
 router.afterEach((to) => {
-  const meta = to.meta || {}
-
-  document.title = meta.title || DEFAULT_TITLE
-  setMetaTag('description', meta.description || DEFAULT_DESCRIPTION)
-
-  if (meta.robots) {
-    setMetaTag('robots', meta.robots)
-  } else {
-    removeMetaTag('robots')
-  }
-
-  const canonical = `https://cncg.me${to.path}`
-  let link = document.querySelector('link[rel="canonical"]')
-  if (!link) {
-    link = document.createElement('link')
-    link.rel = 'canonical'
-    document.head.appendChild(link)
-  }
-  link.href = canonical
-
-  setMetaProperty('og:title', meta.title || DEFAULT_TITLE)
-  setMetaProperty('og:description', meta.description || DEFAULT_DESCRIPTION)
-  setMetaProperty('og:url', canonical)
+  const title = to.meta?.title || 'CNCG'
+  const desc = to.meta?.description || 'CNCG - 独立数字工作室'
+  document.title = title
+  let meta = document.querySelector('meta[name="description"]')
+  if (meta) meta.content = desc
 })
 
-function setMetaTag(name, content) {
-  let el = document.querySelector(`meta[name="${name}"]`)
-  if (!el) {
-    el = document.createElement('meta')
-    el.name = name
-    document.head.appendChild(el)
-  }
-  el.content = content
-}
-
-function removeMetaTag(name) {
-  const el = document.querySelector(`meta[name="${name}"]`)
-  if (el) el.remove()
-}
-
-function setMetaProperty(property, content) {
-  let el = document.querySelector(`meta[property="${property}"]`)
-  if (!el) {
-    el = document.createElement('meta')
-    el.property = property
-    document.head.appendChild(el)
-  }
-  el.content = content
-}
+export { router }
+export default router

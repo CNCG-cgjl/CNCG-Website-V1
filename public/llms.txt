@@ -1,0 +1,28 @@
+# CNCG
+
+CNCG helps individuals, studios and small businesses make their websites understandable, crawlable and referenceable by AI systems.
+
+## Core pages
+
+- Homepage: https://cncg.me/
+- Services: https://cncg.me/services
+- AI Visibility Audit: https://cncg.me/services/ai-visibility-audit
+- AI-ready Website: https://cncg.me/services/ai-ready-website
+- FAQ: https://cncg.me/faq
+- About: https://cncg.me/about
+- Contact: https://cncg.me/contact
+
+## AI-readable documents
+
+- https://cncg.me/ai-overview.md
+- https://cncg.me/company-profile.md
+- https://cncg.me/services.md
+- https://cncg.me/faq.md
+
+## Contact
+
+Website: https://cncg.me
+
+## Last updated
+
+2026-06-02
